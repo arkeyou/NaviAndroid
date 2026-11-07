@@ -1,0 +1,21 @@
+# Ignorar pasta iOS (mantida em repositório próprio)
+Navi_iOS/
+
+# Build e caches Gradle/Android
+.gradle/
+**/build/
+*.apk
+*.aab
+
+# SO e IDEs
+.DS_Store
+Thumbs.db
+*.iml
+.idea/
+
+# Arquivos de log e temporários locais
+*.log
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/

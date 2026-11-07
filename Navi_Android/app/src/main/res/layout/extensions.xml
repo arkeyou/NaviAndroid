@@ -1,0 +1,87 @@
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="vertical">
+	<LinearLayout
+		android:id="@+id/bg"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:orientation="vertical">
+		<LinearLayout
+			android:id="@+id/linear2"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:orientation="horizontal">
+			<com.a525team.weekbrowser.SkinTextView
+				android:id="@+id/textview1"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:padding="8dp"
+				android:gravity="center_horizontal"
+				android:text="@string/compile"
+				android:textSize="18sp"
+				android:textStyle="bold"
+				android:layout_weight="1"
+				app:skinKey="add" />
+			<com.a525team.weekbrowser.SkinButton
+				android:id="@+id/comphint"
+				android:layout_width="30dp"
+				android:layout_height="match_parent"
+				android:padding="8dp"
+				android:text="\?"
+				android:textSize="12sp" />
+		</LinearLayout>
+		<HorizontalScrollView
+			android:id="@+id/hscroll1"
+			android:layout_width="match_parent"
+			android:layout_height="50dp">
+			<LinearLayout
+				android:id="@+id/linear1"
+				android:layout_width="wrap_content"
+				android:layout_height="50dp"
+				android:orientation="horizontal">
+				<com.a525team.weekbrowser.SkinButton
+					android:id="@+id/colch"
+					android:layout_width="wrap_content"
+					android:layout_height="50dp"
+					android:layout_marginRight="2dp"
+					android:padding="8dp"
+					android:text="@string/theme_comp"
+					android:textSize="12sp" />
+				<com.a525team.weekbrowser.SkinButton
+					android:id="@+id/vid"
+					android:layout_width="wrap_content"
+					android:layout_height="50dp"
+					android:layout_marginLeft="2dp"
+					android:padding="8dp"
+					android:text="@string/skipvideo_comp"
+					android:textSize="12sp" />
+			</LinearLayout>
+		</HorizontalScrollView>
+		<com.a525team.weekbrowser.SkinTextView
+			android:id="@+id/textview2"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:padding="8dp"
+			android:gravity="center_horizontal|center_vertical"
+			android:text="@string/addnew"
+			android:textSize="18sp"
+			android:textStyle="bold"
+			app:skinKey="add" />
+		<Spinner
+			android:id="@+id/spinner1"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:spinnerMode="dropdown" />
+		<ListView
+			android:id="@+id/listview1"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:padding="8dp"
+			android:choiceMode="none"
+			tools:listitem="@layout/extension" />
+	</LinearLayout>
+</LinearLayout>

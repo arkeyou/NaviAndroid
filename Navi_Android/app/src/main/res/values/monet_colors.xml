@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Neutral 1 -->
+    <color name="m_n1_10">#FEFAFE</color>
+    <color name="m_n1_50">#FAFAFA</color>
+    <color name="m_n1_100">#F5F5F5</color>
+    <color name="m_n1_200">#EEEEEE</color>
+    <color name="m_n1_300">#E0E0E0</color>
+    <color name="m_n1_400">#BDBDBD</color>
+    <color name="m_n1_500">#9E9E9E</color>
+    <color name="m_n1_600">#757575</color>
+    <color name="m_n1_700">#616161</color>
+    <color name="m_n1_800">#424242</color>
+    <color name="m_n1_900">#212121</color>
+
+    <!-- Neutral 2 -->
+    <color name="m_n2_10">#F2F3F6</color>
+    <color name="m_n2_50">#ECEFF1</color>
+    <color name="m_n2_100">#CFD8DC</color>
+    <color name="m_n2_200">#B0BEC5</color>
+    <color name="m_n2_300">#90A4AE</color>
+    <color name="m_n2_400">#78909C</color>
+    <color name="m_n2_500">#607D8B</color>
+    <color name="m_n2_600">#546E7A</color>
+    <color name="m_n2_700">#455A64</color>
+    <color name="m_n2_800">#37474F</color>
+    <color name="m_n2_900">#263238</color>
+
+    <!-- Accent 1 -->
+    <color name="m_a1_10">#E9F6FB</color>
+    <color name="m_a1_50">#E0F2F1</color>
+    <color name="m_a1_100">#B2DFDB</color>
+    <color name="m_a1_200">#80CBC4</color>
+    <color name="m_a1_300">#4DB6AC</color>
+    <color name="m_a1_400">#26A69A</color>
+    <color name="m_a1_500">#009688</color>
+    <color name="m_a1_600">#00897B</color>
+    <color name="m_a1_700">#00796B</color>
+    <color name="m_a1_800">#00695C</color>
+    <color name="m_a1_900">#004D40</color>
+
+    <!-- Accent 2 -->
+    <color name="m_a2_10">#F2FFFC</color>
+    <color name="m_a2_50">#DAF7F3</color>
+    <color name="m_a2_100">#CCE8E4</color>
+    <color name="m_a2_200">#B0CCC8</color>
+    <color name="m_a2_300">#96B1AD</color>
+    <color name="m_a2_400">#7B9693</color>
+    <color name="m_a2_500">#617B78</color>
+    <color name="m_a2_600">#4A6360</color>
+    <color name="m_a2_700">#324B49</color>
+    <color name="m_a2_800">#1C3532</color>
+    <color name="m_a2_900">#051F1D</color>
+
+    <!-- Accent 3 -->
+    <color name="m_a3_10">#FCFCFF</color>
+    <color name="m_a3_50">#E9F1FF</color>
+    <color name="m_a3_100">#CFE5FF</color>
+    <color name="m_a3_200">#AFC9E7</color>
+    <color name="m_a3_300">#94AECB</color>
+    <color name="m_a3_400">#7A93AF</color>
+    <color name="m_a3_500">#607893</color>
+    <color name="m_a3_600">#48617B</color>
+    <color name="m_a3_700">#304962</color>
+    <color name="m_a3_800">#18324A</color>
+    <color name="m_a3_900">#001D34</color>
+</resources>
