@@ -1,8 +1,9 @@
 <resources>
-    <string name="app_name">WeekBrowser</string>
+    <string name="app_name">Navi</string>
+    <string name="app_description">Navi is a lightweight web browser with built-in automation tools.</string>
     <string name="navi_panel">NAVI Automação</string>
     <string name="navi_title">NAVI</string>
-    <string name="navi_description">Este painel está vinculado à aba selecionada do WeekBrowser. O runtime Monitor, Flow e Action será integrado na próxima fase.</string>
+    <string name="navi_description">Este painel está vinculado à aba selecionada do Navi. O runtime Monitor, Flow e Action será integrado na próxima fase.</string>
     <string name="navi_ready">Pronto para consultar a página atual.</string>
     <string name="navi_loading">Carregando página...</string>
     <string name="navi_page_ready">Página pronta.</string>
@@ -114,7 +115,7 @@
     <string name="dev_settings">Developer settings</string>
     <string name="show_used_ram">Show technical info in main screen</string>
     <string name="force_crash">FORCE CRASH</string>
-    <string name="hide_panel_hint">Щоб проявити панелі, вийдіть з браузера та зайдіть, найпростіший спосіб — натиснути кнопку (або здійснити жест) \"Недавні програми □\", та відкрити WeekBrowser</string>
+    <string name="hide_panel_hint">Щоб проявити панелі, вийдіть з браузера та зайдіть, найпростіший спосіб — натиснути кнопку (або здійснити жест) \"Недавні програми □\", та відкрити Navi</string>
     <string name="hide_content_hint">Працює не на всіх пристроях, якщо все-таки це потрібно, забороніть скріншоти</string>
     <string name="no_thanks">Ні, дякую</string>
     <string name="cache_hint">Режим \"Стандарт\" — двигун сам вирішить, звідки що завантажувати.\n\n\"Спочатку кеш, потім мережа\" може зекономити Ваш інтернет-трафік, але на деяких сайтах з динамічно оновлюваною інформацією може не оновлюватися інформація.\n\nАльтернативою є \"Швидша навігація між сайтами\". В цьому режимі сайти, що були запущені менше хвилини тому — запустяться швидко (спочатку кеш, потім мережа), інакше — як в режимі \"Стандарт\". Це найоптимальніший варіант.\n\n\"Лише мережа\" зекономить Вашу пам\'ять телефону (кеш не буде зберігатися), але буде більший інтернет-трафік.\n\n\"Лише кеш\" — це режим, у якій мережа зовсім не використовується, через що це найменш корисна опція.</string>
@@ -227,7 +228,7 @@
     <string name="swipe_e">SWIPE REFRESH</string>
     <string name="redraw_e">SKIN CHANGER</string>
     <string name="frame_e">BLOCK. \"SITES IN SITES\"</string>
-    <string name="jslogon">Enable JavaScript log in file \"WeekBrowser/dev/JavaScriptLog.txt\"</string>
+    <string name="jslogon">Enable JavaScript log in file \"Navi/dev/JavaScriptLog.txt\"</string>
     <string name="browser_locked">BROWSER IS LOCKED!\nENTER THE PASSWORD\n(default is 1111)</string>
     <string name="incorrect_password">Password is incorrect</string>
     <string name="incorrect_bio">Fingerprint is incorrect</string>
@@ -356,7 +357,7 @@
     <string name="navigation_settings">Navigation settings</string>
     <string name="preventclose">Prevent close tab at pressing \"Back\"</string>
     <string name="preventedclose">Close tab prevented</string>
-    <string name="want_exit">Do you want exit from WeekBrowser?</string>
+    <string name="want_exit">Do you want exit from Navi?</string>
     <string name="totalads">Total blocked ads:</string>
     <string name="sharewith">Share with:</string>
     <string name="forcesearch">Force search</string>
@@ -543,7 +544,7 @@
     <string name="dlg_settings">DIALOG BACKGROUND SETTINGS</string>
     <string name="apply_dlg_bg">Apply new dialog backgrounds (Android 12+)</string>
     <string name="faviconclr">Webpage icons deleted!</string>
-    <string name="warninglowram">WeekBrowser:\nLow RAM. Browser is optimizing...</string>
+    <string name="warninglowram">Navi:\nLow RAM. Browser is optimizing...</string>
     <string name="cleaning">Cleaning...</string>
     <string name="formclr">Autocomplete data is clean!</string>
     <string name="load_all">Load _s on all active tabs</string>

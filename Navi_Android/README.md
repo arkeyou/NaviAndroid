@@ -1,8 +1,8 @@
 [Українська](./README-uk.md) | [Русский](./README-ru.md)
 
-# 🪶 WeekBrowser
+# Navi
 
-**WeekBrowser** is an ultra-lightweight web browser for Android. It is designed for those who demand maximum speed, total customization, and absolute respect for device resources.
+**Navi** is an ultra-lightweight web browser for Android. It is designed for those who demand maximum speed, total customization, and absolute respect for device resources.
 
 It requests a bare minimum of permissions (and honestly, even if you deny them, the Universe won't collapse back into a singularity), and features a simple(?) and intuitive(???) interface, because the focus here is strictly on performance and speed. No bloated corporate nonsense.
 
@@ -36,7 +36,7 @@ It requests a bare minimum of permissions (and honestly, even if you deny them, 
 </p>
 
 - 🔒 **Ruthless Anti-Flood & Ad Blocking** — Blocks banners and video ads, replacing them with invisible "pseudo-ads" (so overly sensitive websites don't block you under the guise that their developers are starving without ad revenue).
-  **Don't you just hate it** when you accidentally click an ad banner in some other app, and it forces open a crappy promo site? If your device is on the slower side, I bet you'd be ready to hunt down those developers and start a riot. **Here is your solution:** WeekBrowser intercepts the link, and if it smells like an ad network, the app just quietly closes itself. A dead-simple fix that somehow nobody else thought of. Dear fellow developers, feel free to steal this idea, I'm not greedy :)
+  **Don't you just hate it** when you accidentally click an ad banner in some other app, and it forces open a crappy promo site? If your device is on the slower side, I bet you'd be ready to hunt down those developers and start a riot. **Here is your solution:** Navi intercepts the link, and if it smells like an ad network, the app just quietly closes itself. A dead-simple fix that somehow nobody else thought of. Dear fellow developers, feel free to steal this idea, I'm not greedy :)
 - 🧠 **Life Extender for Retro Devices** — Supports Android starting from version **5.0 (Lollipop)**. The perfect way to breathe a second life into an old, forgotten tablet.
 
 ---
@@ -52,7 +52,7 @@ You can grab the latest APK from official sources:
 
 ## 🛠 Build & Development
 
-WeekBrowser is written in Java for Android using the Sketchware Pro environment.
+Navi is written in Java for Android using the Sketchware Pro environment and is based on the WeekBrowser project.
 
 To build the app yourself:
 1. Clone this repository or download .swb file from Releases.

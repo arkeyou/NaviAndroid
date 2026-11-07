@@ -2663,6 +2663,24 @@ skin.setBG(linear2, 2, false);
 			if ("about:blank".equals(initialUrl)) showStartupLogo(initialWebView);
 			_Reopentab();
 		}
+
+		android.widget.FrameLayout naviSheetContainer = findViewById(R.id.naviSheetContainer);
+		if (naviSheetContainer != null) {
+			naviSheetContainer.setVisibility(View.VISIBLE);
+			naviSheetContainer.bringToFront();
+			if (naviSheetContainer.getChildCount() > 0
+					&& naviSheetContainer.getChildAt(0) instanceof NaviSheetView) {
+				String activeTabTag = getCurrentTabTag();
+				WebView activeWebView = activeTabTag != null
+						? ResourceManager.getInstance().getWebViewForTab(activeTabTag)
+						: null;
+				if (activeWebView != null) {
+					((NaviSheetView) naviSheetContainer.getChildAt(0)).setBrowserSession(
+							new com.a525team.weekbrowser.navi.browser.WeekBrowserWebViewAdapter(
+									activeTabTag, activeWebView));
+				}
+			}
+		}
 	}
 
 	private void showStartupLogo(WebView webView) {

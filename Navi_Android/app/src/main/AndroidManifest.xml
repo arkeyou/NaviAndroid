@@ -21,6 +21,7 @@
 		android:allowBackup="true"
 		android:icon="@mipmap/ic_launcher"
 		android:label="@string/app_name"
+		android:description="@string/app_description"
 		android:name=".SketcApplication"
 		android:requestLegacyExternalStorage="true"
 		android:largeHeap="true"
@@ -103,7 +104,8 @@
 			android:exported="true"
 			android:theme="@android:style/Theme.Black"
 			android:launchMode="standard"
-			android:taskAffinity="com.a525team.weekbrowser.intent">
+			android:taskAffinity="com.a525team.navi.intent">
+
 <!-- Відкривання URL (браузер за замовчуванням) -->
 <intent-filter>
     <action android:name="android.intent.action.VIEW" />
@@ -220,8 +222,8 @@
 			android:exported="true"
 			android:launchMode="singleTask"
 			android:excludeFromRecents="false"
-			android:taskAffinity="com.a525team.weekbrowser.text"
-			> <intent-filter android:icon="@mipmap/text" android:label="WeekEdit"> <action android:name="android.intent.action.VIEW" /> <action android:name="android.intent.action.EDIT" /> <category android:name="android.intent.category.DEFAULT" /> <data android:scheme="file" /> <data android:scheme="content" /> <data android:mimeType="text/*" /> <data android:mimeType="plain/*" /> <data android:mimeType="text/javascript" /> <data android:mimeType="text/java" /> <data android:mimeType="text/smali" /> <data android:mimeType="text/xml" /> <data android:mimeType="application/ecmascript" /> <data android:mimeType="application/javascript" /> <!-- фільтри взято з MW CodeEdit --> </intent-filter>  </activity>
+			android:taskAffinity="com.a525team.navi.text"
+			> <intent-filter android:icon="@mipmap/text" android:label="NaviEdit"> <action android:name="android.intent.action.VIEW" /> <action android:name="android.intent.action.EDIT" /> <category android:name="android.intent.category.DEFAULT" /> <data android:scheme="file" /> <data android:scheme="content" /> <data android:mimeType="text/*" /> <data android:mimeType="plain/*" /> <data android:mimeType="text/javascript" /> <data android:mimeType="text/java" /> <data android:mimeType="text/smali" /> <data android:mimeType="text/xml" /> <data android:mimeType="application/ecmascript" /> <data android:mimeType="application/javascript" /> <!-- фільтри взято з MW CodeEdit --> </intent-filter>  </activity>
 		<activity
 			android:name=".DbgActivity"
 			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
@@ -241,7 +243,8 @@
 			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout|uiMode"
 			android:hardwareAccelerated="true"
 			android:windowSoftInputMode="stateHidden"
-			android:theme="@style/NoActionBar" />
+			android:theme="@style/NoActionBar" />
+
 <activity-alias
 android:name=".AliasLogo1"
 android:icon="@mipmap/modern_blue"
@@ -558,4 +561,4 @@ android:exported="true">
 
 
 	</application>
-</manifest>
+</manifest>

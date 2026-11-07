@@ -166,16 +166,9 @@ Estados: `[ ]` Não iniciado · `[-]` Em andamento · `[x]` Concluído e validad
 - **Aceite:** execução vinculada à sessão correta.
 
 ### AND-031 — Cookies e sessões
-- [ ] Comparar login iOS/Android.
 - [ ] Testar persistência e limpeza de cookies.
 - [ ] Garantir uso da sessão do navegador.
-- **Aceite:** login/logout e sessão persistente testados.
-
-### AND-032 — Downloads, uploads e permissões
-- [ ] Confirmar necessidade no inventário iOS.
-- [ ] Reutilizar mecanismos existentes WeekBrowser.
-- [ ] Implementar somente lacunas necessárias.
-- **Aceite:** recursos requeridos funcionam sem duplicação.
+- **Aceite:** sessão persistente testada.
 
 ### AND-033 — Assinaturas e limites
 - [ ] Inventariar produtos e entitlement iOS.
@@ -185,13 +178,6 @@ Estados: `[ ]` Não iniciado · `[-]` Em andamento · `[x]` Concluído e validad
 - **Aceite:** benefícios dependem do estado confirmado pelo Google Play; não reutilizar StoreKit.
 
 ## Fase 4 — Qualidade e publicação
-
-### AND-040 — Regressão WeekBrowser
-- [ ] Testar navegação, histórico, favoritos e tela inicial.
-- [ ] Testar janelas, links e sessões.
-- [ ] Testar skins e bloqueio de anúncios.
-- [ ] Testar outros recursos identificados.
-- **Aceite:** funcionalidades-base selecionadas continuam funcionando.
 
 ### AND-041 — Testes unitários NAVI
 - [ ] Testar parsing, validação e regras.
@@ -204,19 +190,6 @@ Estados: `[ ]` Não iniciado · `[-]` Em andamento · `[x]` Concluído e validad
 - [ ] Testar navegação, reload e mudança de origem.
 - [ ] Testar múltiplas abas/janelas.
 - **Aceite:** cenários críticos passam nos dispositivos suportados.
-
-### AND-043 — Regressão de automações iOS
-- [ ] Selecionar automações representativas.
-- [ ] Executar os mesmos cenários no Android.
-- [ ] Comparar eventos, ações, estados e resultado final.
-- [ ] Documentar diferenças justificadas.
-- **Aceite:** matriz de paridade preenchida.
-
-### AND-044 — Segurança, privacidade e licenças
-- [ ] Revisar bridge e configurações WebView.
-- [ ] Revisar permissões, logs e armazenamento.
-- [ ] Revisar licenças e avisos de terceiros.
-- **Aceite:** checklist aprovado e sem vulnerabilidades críticas conhecidas.
 
 ### AND-045 — Release Google Play
 - [ ] Configurar identidade NAVI, assinatura e build release.

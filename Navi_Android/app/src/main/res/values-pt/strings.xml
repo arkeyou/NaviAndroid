@@ -1,8 +1,9 @@
 <resources>
-    <string name="app_name">WeekBrowser</string>
+    <string name="app_name">Navi</string>
+    <string name="app_description">Navi é um navegador leve com ferramentas de automação integradas.</string>
     <string name="navi_panel">NAVI Automação</string>
     <string name="navi_title">NAVI</string>
-    <string name="navi_description">Este painel está vinculado à aba selecionada do WeekBrowser. O runtime Monitor, Flow e Action será integrado na próxima fase.</string>
+    <string name="navi_description">Este painel está vinculado à aba selecionada do Navi. O runtime Monitor, Flow e Action será integrado na próxima fase.</string>
     <string name="navi_ready">Pronto para consultar a página atual.</string>
     <string name="navi_loading">Carregando página...</string>
     <string name="navi_page_ready">Página pronta.</string>
@@ -114,7 +115,7 @@
     <string name="dev_settings">Configurações de desenvolvedor</string>
     <string name="show_used_ram">Mostrar informações técnicas na tela principal</string>
     <string name="force_crash">FORÇAR FECHAMENTO</string>
-    <string name="hide_panel_hint">Para reexibir os painéis, saia do navegador e entre novamente; a maneira mais fácil é pressionar o botão (ou fazer o gesto) \\"Aplicativos recentes □\\" e abrir o WeekBrowser</string>
+    <string name="hide_panel_hint">Para reexibir os painéis, saia do navegador e entre novamente; a maneira mais fácil é pressionar o botão (ou fazer o gesto) \\"Aplicativos recentes □\\" e abrir o Navi</string>
     <string name="hide_content_hint">Não funciona em todos os dispositivos; se ainda assim for necessário, proíba capturas de tela</string>
     <string name="no_thanks">Não, obrigado</string>
     <string name="cache_hint">Modo \\"Padrão\\" — o próprio motor decidirá de onde carregar cada item.\n\n\\"Primeiro cache, depois rede\\" pode economizar seus dados móveis, mas em alguns sites com informações dinâmicas o conteúdo pode não ser atualizado.\n\nUma alternativa é \\"Navegação mais rápida entre sites\\". Nesse modo, sites abertos há menos de um minuto carregarão rapidamente (primeiro cache, depois rede); caso contrário, carregarão como no modo \\"Padrão\\". Esta é a opção mais recomendada.\n\n\\"Apenas rede\\" economiza a memória do seu telefone (o cache não será salvo), mas consumirá mais tráfego de internet.\n\n\\"Apenas cache\\" é um modo em que a rede não é utilizada, sendo a opção menos útil.</string>
@@ -227,7 +228,7 @@
     <string name="swipe_e">ATUALIZAR DESLIZANDO</string>
     <string name="redraw_e">ALTERAR TEMA</string>
     <string name="frame_e">BLOQ. \\"SITES EM SITES\\"</string>
-    <string name="jslogon">Ativar registro de JavaScript no arquivo \\"WeekBrowser/dev/JavaScriptLog.txt\\"</string>
+    <string name="jslogon">Ativar registro de JavaScript no arquivo \\"Navi/dev/JavaScriptLog.txt\\"</string>
     <string name="browser_locked">O NAVEGADOR ESTÁ BLOQUEADO!\nDIGITE A SENHA\n(padrão: 1111)</string>
     <string name="incorrect_password">Senha incorreta</string>
     <string name="incorrect_bio">Impressão digital incorreta</string>
@@ -356,7 +357,7 @@
     <string name="navigation_settings">Configurações de navegação</string>
     <string name="preventclose">Evitar fechar aba ao pressionar \\"Voltar\\"</string>
     <string name="preventedclose">Fechamento da aba evitado</string>
-    <string name="want_exit">Deseja sair do WeekBrowser?</string>
+    <string name="want_exit">Deseja sair do Navi?</string>
     <string name="totalads">Total de anúncios bloqueados:</string>
     <string name="sharewith">Compartilhar com:</string>
     <string name="forcesearch">Forçar pesquisa</string>
@@ -543,7 +544,7 @@
     <string name="dlg_settings">CONFIGURAÇÕES DE FUNDO DO DIÁLOGO</string>
     <string name="apply_dlg_bg">Aplicar novos fundos de diálogo (Android 12+)</string>
     <string name="faviconclr">Ícones de sites excluídos!</string>
-    <string name="warninglowram">WeekBrowser:\nPouca memória RAM. Otimizando navegador...</string>
+    <string name="warninglowram">Navi:\nPouca memória RAM. Otimizando navegador...</string>
     <string name="cleaning">Limpando...</string>
     <string name="formclr">Dados de preenchimento automático limpos!</string>
     <string name="load_all">Carregar _s em todas as abas ativas</string>

@@ -1,4 +1,6 @@
 <resources>
+    <string name="app_name">Navi</string>
+    <string name="app_description">Navi — легкий веббраузер із вбудованими інструментами автоматизації.</string>
     <string name="select_action">Вибір дії</string>
     <string name="yes">Так</string>
     <string name="no">Ні</string>
@@ -98,7 +100,7 @@
     <string name="dev_settings">Налаштування розробника</string>
     <string name="show_used_ram">Показати технічну інформацію на головному екрані</string>
     <string name="force_crash">ПРИМУСОВИЙ ВИЛІТ</string>
-    <string name="hide_panel_hint">Щоб проявити панелі, вийдіть з браузера та зайдіть, найпростіший спосіб — натиснути кнопку (або здійснити жест) \"Недавні програми □\", та відкрити WeekBrowser</string>
+    <string name="hide_panel_hint">Щоб проявити панелі, вийдіть з браузера та зайдіть, найпростіший спосіб — натиснути кнопку (або здійснити жест) \"Недавні програми □\", та відкрити Navi</string>
     <string name="hide_content_hint">Працює не на всіх пристроях, якщо все-таки це потрібно, забороніть скріншоти</string>
     <string name="no_thanks">Ні, дякую</string>
     <string name="cache_hint">Режим \"Стандарт\" — двигун сам вирішить, звідки що завантажувати.\n\n\"Спочатку кеш, потім мережа\" може зекономити Ваш інтернет-трафік, але на деяких сайтах з динамічно оновлюваною інформацією може не оновлюватися інформація.\n\nАльтернативою є \"Швидша навігація між сайтами\". В цьому режимі сайти, що були запущені менше хвилини тому — запустяться швидко (спочатку кеш, потім мережа), інакше — як в режимі \"Стандарт\". Це найоптимальніший варіант.\n\n\"Лише мережа\" зекономить Вашу пам\'ять телефону (кеш не буде зберігатися), але буде більший інтернет-трафік.\n\n\"Лише кеш\" — це режим, у якій мережа зовсім не використовується, через що це найменш корисна опція.</string>
@@ -211,7 +213,7 @@
     <string name="swipe_e">ОНОВЛ. ПЕРЕТЯГ.</string>
     <string name="redraw_e">ЗМІН. ОФОРМЛЕННЯ</string>
     <string name="frame_e">БЛОК. \"САЙТИ У САЙТІ\"</string>
-    <string name="jslogon">Увімкнути лог JavaScript у файлі \"WeekBrowser/dev/JavaScriptLog.txt\"</string>
+    <string name="jslogon">Увімкнути лог JavaScript у файлі \"Navi/dev/JavaScriptLog.txt\"</string>
     <string name="browser_locked">БРАУЗЕР ЗАБЛОКОВАНО!\nВВЕДІТЬ ПАРОЛЬ\n(за замовчуванням 1111)</string>
     <string name="incorrect_password">Пароль неправильний</string>
     <string name="incorrect_bio">Відбиток пальця неправильний</string>
@@ -342,7 +344,7 @@
     <string name="navigation_settings">Налаштування навігації</string>
     <string name="preventclose">Запобігти закриттю вкладки при натисканні \"Назад\"</string>
     <string name="preventedclose">Закриття вкладки запобігнуте</string>
-    <string name="want_exit">Ви хочете вийти з WeekBrowser?</string>
+    <string name="want_exit">Ви хочете вийти з Navi?</string>
     <string name="totalads">Всього заблоковано реклам:</string>
     <string name="sharewith">Поділитися з:</string>
     <string name="forcesearch">Примусовий пошук</string>
@@ -528,7 +530,7 @@
     <string name="dlg_settings">НАЛАШТУВАННЯ ФОНУ ДІАЛОГІВ</string>
     <string name="apply_dlg_bg">Застосувати новий фон діалогів (Android 12+)</string>
     <string name="faviconclr">Значки сайтів видалено!</string>
-    <string name="warninglowram">WeekBrowser:\nМало ОЗП. Оптимізація браузера...</string>
+    <string name="warninglowram">Navi:\nМало ОЗП. Оптимізація браузера...</string>
     <string name="cleaning">Очищення...</string>
     <string name="formclr">Дані автозаповнення очищено!</string>
     <string name="load_all">Завантажити _s у всіх активних вкладках</string>
