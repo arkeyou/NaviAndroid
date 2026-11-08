@@ -45,7 +45,7 @@ O `AndroidManifest.xml` atual declara permissões de rede, localização, armaze
 
 O código NAVI está no Swift Package `Navi_iOS/LocalPackage`, target `Automation`. `AutomationManager` decodifica `NaviConfig`, gera scripts e coordena três agentes `@MainActor`:
 
-- **MonitorAgent** consulta `urlMonitor`, aplica `triggerMonitor` (Regex), converte resultados em `JobPayload` e insere jobs no `JobStore`.
+- **MonitorAgent** consulta `urlMonitor`, aplica `triggerMonitor` (Regex), converte resultados em `JobPayload` e insere jobs no `JobStore`. O preenchimento do ID de sessão aceita `%@` do iOS e `%s` legado do Android, preservando escapes percentuais de URL como `%2F`.
 - **FlowAgent** consome jobs `.added`, deduplica pelo código e, quando configurado, consulta `urlFlow`; atualiza os estados e parâmetros do job.
 - **ActionAgent** consome jobs `.valid`, monta a URL de ação e publica o job como `.ok`.
 - **JobStore** é um actor com armazenamento em memória e streams de eventos; não é persistência de histórico.
@@ -98,5 +98,7 @@ Esta fronteira está sendo implementada sobre o baseline, sem port mecânico de 
 - A avaliação só aceita script explícito, de tamanho limitado, na aba vinculada e em URL HTTP(S) sem credenciais. O retorno do `evaluateJavascript` é assíncrono e encaminha valor ou erro ao chamador na thread principal.
 - O botão “NAVI Automação” no painel existente do WeekBrowser abre `NaviActivity` com o identificador da aba ativa. A tela inicial observa o carregamento e oferece uma ação controlada para ler `document.title`; não representa ainda o editor, importador, logs ou runtime iOS.
 - Nenhum `addJavascriptInterface`, `WKScriptMessageHandler` ou bridge página→nativo foi criado. A inspeção iOS não mostrou necessidade para o fluxo atual; o callback do `evaluateJavascript` atende a resposta nativo→página.
+- `NaviSheetView` reconhece três entradas sem substituir o parser existente: configuração JSON legada é enviada diretamente ao `AutomationManager`; wrapper `newVersion` faz GET HTTPS para `api.npoint.io/{id}/hash` em thread de trabalho e descriptografa o payload combinado nonce+ciphertext+tag com AES-GCM; prefixo `javascript:` executa uma vez na sessão WebView ativa pelo adaptador e aguarda callback assíncrono.
+- O carregador nPoint não envia `secret` na requisição e não registra o conteúdo recebido. A chave é usada localmente como bytes UTF-8, conforme `SymmetricKey(data:)` no iOS, e precisa ter tamanho AES válido (16, 24 ou 32 bytes). Ainda falta validar a automação com um payload/chave compatíveis em aparelho.
 
 Não foi adicionada injeção automática: a referência iOS executa os scripts sob demanda, sem `WKUserScript` de início de documento. O adaptador também não tenta automatizar frames. A tela NAVI e o adaptador ainda precisam de build e validação em aparelho; mudanças desta seção ficam provisórias até essa autorização/teste.

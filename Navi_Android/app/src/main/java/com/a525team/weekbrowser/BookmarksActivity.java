@@ -3760,6 +3760,7 @@ divcol.setTextColor((int)Long.parseLong(dataHolder.getData("tf"),16));
 				runOnUiThread(() -> showDeleteDialog(ids, getString(R.string.dellink), false));
 			} else {
 				HomePageGen.getUrlBMAsync(BookmarksActivity.this, ids, url -> runOnUiThread(() -> {
+					dataHolder.setData("sametab", "");
 					intent.setClass(getApplicationContext(), IntentActivity.class);
 					intent.setData(Uri.parse(url));
 					startActivity(intent);

@@ -71,7 +71,7 @@ Fonte: `AJUDA.md` (NaviBrowser)
   *Exemplo:* `"https://www.flightaware.com/live/flight/"`
 - **`mainVerify`** (`AutomationScript`): Verificação realizada na página antes da ação.
 - **`mainAction`** (`AutomationScript`): Ação executada pelo NAVI quando a condição for atendida.
-- **`secondaryVerify`** / **`secondaryAction`** (`AutomationScript`, opcional): Verificação e ação secundárias opcionais.
+- **`secondaryVerify`** / **`secondaryAction`** (`AutomationScript`, opcional): verificação e ação alternativas, avaliadas quando `mainVerify` não encontra a condição principal. O Android também aceita `secondVerify` / `secondAction` como aliases.
 - **`urlFlow`** (String, opcional): URL intermediária para validação e enriquecimento do job.
 - **`urlSessionIdentifier`** / **`urlSessionInfo`** (String, opcional): Endpoints de gerenciamento de sessão/login quando aplicável.
 
@@ -80,6 +80,8 @@ Fonte: `AJUDA.md` (NaviBrowser)
 - **`selector`**: Seletor CSS do elemento (usado em `"exists"` e `"click"`). Ex: `"div[class='flightPageFriendlyIdentLbl']"`, `"button#comprar"`.
 - **`customSelector`** (opcional): Expressão complementar JS avaliada em conjunto.
 - **`message`**: Mensagem exibida no alerta de confirmação nativo/web (usado em `"confirm"`). Ex: `"Ir para o proximo?"`.
+
+O Android verifica `mainVerify` após o carregamento da página. Quando o resultado é falso, avalia também a verificação secundária e repete o ciclo até uma condição ser atendida ou expirar o tempo configurado para a página. `mainAction` e `secondaryAction` são executadas somente quando suas verificações correspondentes retornam verdadeiro.
 
 ### Exemplo Prático de Configuração (JSON)
 ```json

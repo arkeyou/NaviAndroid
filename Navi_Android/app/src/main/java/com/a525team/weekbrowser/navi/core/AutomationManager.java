@@ -41,6 +41,8 @@ public class AutomationManager implements AutomationEventEmitter {
     private String secondaryActionScript = "";
 
     private volatile boolean isRunning = false;
+    private volatile boolean isLiveSessionMonitorRunning = false;
+    private Thread liveSessionMonitorThread;
     private final JobStore.JobListener jobEventListener;
 
     public AutomationManager() {
@@ -97,12 +99,25 @@ public class AutomationManager implements AutomationEventEmitter {
     public synchronized void start(
             String naviConfigJson,
             String sessionId,
-            String cookieList,
+            BrowserCookieProvider cookieProvider,
             double monitorIntervalSeconds
+    ) {
+        start(naviConfigJson, sessionId, cookieProvider, monitorIntervalSeconds, 30.0);
+    }
+
+    public synchronized void start(
+            String naviConfigJson,
+            String sessionId,
+            BrowserCookieProvider cookieProvider,
+            double monitorIntervalSeconds,
+            double monitorLiveOnlineIntervalSeconds
     ) {
         if (isRunning) return;
 
         try {
+            final BrowserCookieProvider effectiveCookieProvider = cookieProvider != null
+                    ? cookieProvider
+                    : url -> "";
             config = NaviConfig.fromJsonString(naviConfigJson);
 
             mainVerifyScript = JavaScriptBuilder.generate(config.getMainVerify());
@@ -116,13 +131,19 @@ public class AutomationManager implements AutomationEventEmitter {
                     : "";
 
             String effectiveSessionId = sessionId != null ? sessionId : "";
+            if (effectiveSessionId.trim().isEmpty() && config.getSessionId() != null) {
+                effectiveSessionId = config.getSessionId();
+            }
             if (config.getUrlSessionIdentifier() != null && effectiveSessionId.isEmpty()) {
                 try {
-                    effectiveSessionId = fetchSessionIdentifier(config.getUrlSessionIdentifier(), cookieList);
+                    effectiveSessionId = fetchSessionIdentifier(
+                            config.getUrlSessionIdentifier(), effectiveCookieProvider);
                 } catch (Exception e) {
                     emit(new ActionEvent.SendMsg("Session Warning: " + e.getMessage(), false, true));
                 }
             }
+
+            if (Thread.currentThread().isInterrupted()) return;
 
             long intervalMillis = (long) (monitorIntervalSeconds * 1000);
             if (intervalMillis <= 0) intervalMillis = 5000L;
@@ -132,7 +153,7 @@ public class AutomationManager implements AutomationEventEmitter {
                     config.getUrlMonitor(),
                     config.getTriggerMonitor(),
                     effectiveSessionId,
-                    cookieList,
+                    effectiveCookieProvider,
                     intervalMillis,
                     this
             );
@@ -149,14 +170,39 @@ public class AutomationManager implements AutomationEventEmitter {
                     this
             );
 
+            if (Thread.currentThread().isInterrupted()) return;
+
             store.addListener(jobEventListener);
 
-            monitorAgent.start();
-            flowAgent.start();
-            actionAgent.start();
-
             isRunning = true;
+            if (Thread.currentThread().isInterrupted()) {
+                stop();
+                return;
+            }
+            monitorAgent.start();
+            if (Thread.currentThread().isInterrupted()) {
+                stop();
+                return;
+            }
+            flowAgent.start();
+            if (Thread.currentThread().isInterrupted()) {
+                stop();
+                return;
+            }
+            actionAgent.start();
             emit(new ActionEvent.SendMsg("Automação iniciada com sucesso!", false, true));
+
+            String urlSessionInfo = config.getUrlSessionInfo();
+            if (urlSessionInfo != null && !urlSessionInfo.trim().isEmpty()) {
+                if (effectiveSessionId.trim().isEmpty()) {
+                    emit(new ActionEvent.SendMsg(
+                            "Session Warning: não foi possível verificar o status da live porque o sessionId está vazio.",
+                            false, true));
+                } else {
+                    startLiveSessionMonitor(urlSessionInfo, effectiveSessionId, effectiveCookieProvider,
+                            monitorLiveOnlineIntervalSeconds);
+                }
+            }
 
         } catch (Exception e) {
             emit(new ActionEvent.SendMsg("Falha ao iniciar automação: " + e.getMessage(), true, true));
@@ -164,9 +210,16 @@ public class AutomationManager implements AutomationEventEmitter {
         }
     }
 
-    public synchronized void stop() {
-        if (!isRunning) return;
+    public void stop() {
         isRunning = false;
+        isLiveSessionMonitorRunning = false;
+
+        if (liveSessionMonitorThread != null) {
+            liveSessionMonitorThread.interrupt();
+            liveSessionMonitorThread = null;
+        }
+
+        if (monitorAgent == null && flowAgent == null && actionAgent == null) return;
 
         store.removeListener(jobEventListener);
 
@@ -189,6 +242,101 @@ public class AutomationManager implements AutomationEventEmitter {
         emit(new ActionEvent.SendMsg("Automação parada.", false, true));
     }
 
+    private void startLiveSessionMonitor(String urlSessionInfo, String sessionId,
+                                         BrowserCookieProvider cookieProvider, double intervalSeconds) {
+        if (isLiveSessionMonitorRunning) return;
+        isLiveSessionMonitorRunning = true;
+        long intervalMillis = (long) (intervalSeconds * 1000);
+        if (intervalMillis <= 0) intervalMillis = 30000L;
+        final long liveCheckIntervalMillis = intervalMillis;
+
+        liveSessionMonitorThread = new Thread(() -> {
+            boolean onlineMessageEmitted = false;
+            while (isRunning && isLiveSessionMonitorRunning
+                    && !Thread.currentThread().isInterrupted()) {
+                try {
+                    if (!fetchSessionIsOpen(urlSessionInfo, sessionId, cookieProvider)) {
+                        emit(new ActionEvent.SendMsg("A live NÃO está online! Automação interrompida.", true, true));
+                        isLiveSessionMonitorRunning = false;
+                        break;
+                    }
+                    if (!onlineMessageEmitted) {
+                        emit(new ActionEvent.SendMsg("Live online; monitoramento ativo.", false, true));
+                        onlineMessageEmitted = true;
+                    }
+                    Thread.sleep(liveCheckIntervalMillis);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                } catch (Exception e) {
+                    if (isRunning && isLiveSessionMonitorRunning) {
+                        String message = e.getMessage() != null
+                                ? e.getMessage()
+                                : e.getClass().getSimpleName();
+                        emit(new ActionEvent.SendMsg("Session Error: " + message, false, true));
+                    }
+                    isLiveSessionMonitorRunning = false;
+                    break;
+                }
+            }
+        }, "Navi-LiveSessionMonitor-Thread");
+        liveSessionMonitorThread.setDaemon(true);
+        liveSessionMonitorThread.start();
+    }
+
+    private boolean fetchSessionIsOpen(String urlSessionInfo, String sessionId,
+                                       BrowserCookieProvider cookieProvider)
+            throws Exception {
+        String formattedUrl = MonitorAgent.formatMonitorUrl(urlSessionInfo, sessionId);
+        URL url = new URL(formattedUrl);
+        String protocol = url.getProtocol();
+        if (!"http".equalsIgnoreCase(protocol) && !"https".equalsIgnoreCase(protocol)) {
+            throw new java.io.IOException("URL de verificação da live deve usar HTTP ou HTTPS.");
+        }
+
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        try {
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(15000);
+            connection.setReadTimeout(15000);
+            String cookies = cookieProvider.getCookieHeader(formattedUrl);
+            if (cookies != null && !cookies.isEmpty()) {
+                connection.setRequestProperty("Cookie", cookies);
+            }
+
+            int responseCode = connection.getResponseCode();
+            InputStreamReader reader = new InputStreamReader(
+                    responseCode >= 200 && responseCode <= 299
+                            ? connection.getInputStream()
+                            : connection.getErrorStream(),
+                    StandardCharsets.UTF_8);
+            StringBuilder response = new StringBuilder();
+            try (BufferedReader bufferedReader = new BufferedReader(reader)) {
+                String line;
+                while ((line = bufferedReader.readLine()) != null) response.append(line);
+            }
+
+            if (responseCode < 200 || responseCode > 299) {
+                throw new java.io.IOException("HTTP " + responseCode + " na verificação da live.");
+            }
+
+            JSONObject json = new JSONObject(response.toString());
+            if (json.has("msg") && !json.isNull("msg")) {
+                throw new Exception("Gentileza efetuar o login para verificar a live.");
+            }
+            JSONObject data = json.optJSONObject("data");
+            if (data == null || !data.has("sessionStatus")) {
+                throw new java.io.IOException("Resposta inválida na verificação da live.");
+            }
+            Object status = data.opt("sessionStatus");
+            if (status instanceof Number && ((Number) status).intValue() == 1) return true;
+            if ("1".equals(String.valueOf(status))) return true;
+            return false;
+        } finally {
+            connection.disconnect();
+        }
+    }
+
     public boolean isRunning() {
         return isRunning;
     }
@@ -197,12 +345,14 @@ public class AutomationManager implements AutomationEventEmitter {
         return store;
     }
 
-    private String fetchSessionIdentifier(String urlSessionIdentifier, String cookies) throws Exception {
+    private String fetchSessionIdentifier(String urlSessionIdentifier,
+                                          BrowserCookieProvider cookieProvider) throws Exception {
         URL url = new URL(urlSessionIdentifier);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
         conn.setConnectTimeout(15000);
         conn.setReadTimeout(15000);
+        String cookies = cookieProvider.getCookieHeader(url.toString());
         if (cookies != null && !cookies.isEmpty()) {
             conn.setRequestProperty("Cookie", cookies);
         }

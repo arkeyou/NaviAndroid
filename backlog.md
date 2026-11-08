@@ -105,6 +105,7 @@ Estados: `[ ]` Não iniciado · `[-]` Em andamento · `[x]` Concluído e validad
 
 ### AND-021 — Monitor
 - [x] Portar monitoramento e periodicidade (`MonitorAgent` com background Thread e intervalo configurável).
+- [x] Substituir o ID de sessão em URLs com `%@` (formato iOS) e `%s` (formato Android legado), sem tratar escapes URL como placeholders.
 - [x] Portar pausa, retomada e parada (`start()`, `stop()`, cancelamento por interrupção).
 - [x] Portar detecção e deduplicação (`triggerMonitor` Regex com suporte tanto a JSON de comentários quanto texto/body bruto, inserindo novos jobs no `JobStore`).
 - **Aceite:** testes demonstram detecção correta e controle do ciclo de vida.
@@ -147,7 +148,68 @@ Estados: `[ ]` Não iniciado · `[-]` Em andamento · `[x]` Concluído e validad
 - **Aceite:** falhas rastreáveis sem exposição de dados privados.
 - **Resultado:** integrado ao `NaviDataStore` e `NaviActivity` com rolagem automática e botão para limpar histórico de logs.
 
+### AND-027 — Resolver formatos de script NAVI
+- [x] Manter o JSON legado de configuração encaminhado diretamente ao `AutomationManager`.
+- [x] Buscar e descriptografar o wrapper `newVersion` do nPoint com AES-GCM, fora da thread principal.
+- [x] Executar scripts `javascript:` uma vez na sessão WebView vinculada e registrar retorno/erro.
+- [ ] Validar os dois formatos de configuração e JavaScript em dispositivo com uma chave AES compatível.
+- **Aceite:** scripts iOS legados, nPoint e JavaScript executam na aba vinculada sem bloquear a interface.
+- **Resultado:** `NpointConfigLoader` e `NaviSheetView` implementam o despacho e o carregamento assíncrono. Build Android concluído; validação funcional nPoint aguarda confirmação do tamanho/derivação da chave enviada.
+
 ## EXTRAS
+
+### AND-EXTRA — Ações compartilhadas nas abas do painel NAVI
+- [x] Exibir Iniciar/Parar Automação em Script, Log e Processados, refletindo o mesmo estado.
+- [x] Trocar os botões largos de limpeza por ícones compactos ao lado de Iniciar/Parar.
+- **Resultado:** `NaviSheetView` sincroniza os três botões e identifica Limpar Log com lixeira e Limpar Processados com vassoura; ações de limpeza seguem acessíveis por descrição.
+
+### AND-EXTRA — Limpar Log e Processados ao abrir o app
+- [x] Limpar os arquivos persistidos antes de criar a interface principal.
+- [x] Iniciar as abas Log e Processados sem conteúdo antigo.
+- **Resultado:** `MainActivity.onCreate` apaga `navi_log.txt` e `navi_processed.txt` antes de instanciar o painel NAVI.
+
+### AND-EXTRA — Alinhar execução de scripts de página ao iOS
+- [x] Executar a verificação secundária em cada ciclo em que `mainVerify` falhar.
+- [x] Executar cada Action somente quando sua Verify correspondente retorna verdadeiro.
+- [x] Aceitar `secondVerify` / `secondAction` como aliases Android, mantendo `secondaryVerify` / `secondaryAction` como nomes canônicos iOS.
+- **Resultado:** alinhada a ordem de verificação no `NaviSheetView` e adicionado suporte aos aliases no parser Android.
+
+### AND-EXTRA — Abrir páginas da automação na aba ativa
+- [x] Atualizar a sessão NAVI para a aba selecionada antes de abrir cada página enfileirada.
+- [x] Abrir páginas de automação e URL base de autenticação na WebView ativa do WeekBrowser.
+- **Resultado:** `NaviSheetView` resolve a sessão ativa pelo `MainActivity` antes da navegação; páginas são carregadas na aba existente.
+
+### AND-EXTRA — Abrir favorito na aba atual
+- [x] Passar a ação `sametab` ao fluxo de abertura de favoritos do WeekBrowser.
+- [x] Carregar o URL selecionado na WebView da aba ativa, sem criar uma aba nova.
+- **Resultado:** seleção de favorito marca a navegação como mesma aba antes de encaminhá-la ao `IntentActivity`; `MainActivity` reutiliza a WebView atual.
+
+### AND-EXTRA — Atalho para abas na barra de endereços
+- [x] Exibir botão de abas junto ao botão de favoritos.
+- [x] Abrir/fechar a grade de abas existente do WeekBrowser ao tocar.
+- **Resultado:** botão `▢` adicionado imediatamente à direita dos favoritos; usa a ação WeekBrowser `-5` para alternar a grade atual de abas.
+
+### AND-EXTRA — Recuperar cookies da WebView para requisições autenticadas NAVI
+- [x] Consultar o cookie jar do WeekBrowser por URL para `urlSessionIdentifier`, `urlMonitor` e `urlSessionInfo`.
+- [x] Encaminhar cookies conforme domínio da requisição, sem registrar valores sensíveis.
+- [x] Preservar `sessionId` declarado na configuração legada ou wrapper nPoint.
+- [x] Manter Flow, Action e nPoint com o comportamento de requisição equivalente ao iOS.
+- **Resultado:** introduzido `BrowserCookieProvider` e adaptador `WeekBrowserCookieProvider`; os pontos de entrada usam o cookie store do WebView e mantêm o `sessionId` da configuração.
+
+### AND-EXTRA — Padronizar pontos de progresso do Action e Monitor
+- [x] Manter `˙` por consulta bem-sucedida no Monitor.
+- [x] Usar `.` nas tentativas sem condição atendida do Action, inclusive na verificação secundária.
+- **Resultado:** Monitor já emitia `˙`; Action agora usa `.` e registra cada tentativa secundária sem adicionar quebras de linha.
+
+### AND-EXTRA — Botão para ocultar teclado no editor de script
+- [x] Adicionar controle acessível para dispensar o teclado sem sair da edição.
+- **Resultado:** botão de seta adicionado à barra do editor na `NaviSheetView`; oculta o teclado mantendo o foco no campo.
+
+### AND-EXTRA — Corrigir monitoramento de live online
+- [x] Registrar no log a confirmação inicial de live online.
+- [x] Encerrar a automação quando a consulta periódica confirmar que a live ficou offline.
+- [ ] Validar o fluxo em dispositivo com uma sessão real (online e depois encerrada).
+- **Resultado:** corrigido o fluxo Android em `AutomationManager`; a confirmação offline agora emite evento de parada consumido pela interface, encerrando Monitor/Flow/Action. Validação em dispositivo pendente.
 
 ### AND-EXTRA - Ajustes
 - [x] Retire o horário do log; entradas antigas também são exibidas sem timestamp.

@@ -1,6 +1,7 @@
 package com.a525team.weekbrowser.navi.agent;
 
 import com.a525team.weekbrowser.navi.core.AutomationEventEmitter;
+import com.a525team.weekbrowser.navi.core.BrowserCookieProvider;
 import com.a525team.weekbrowser.navi.core.JobStore;
 import com.a525team.weekbrowser.navi.model.ActionEvent;
 import com.a525team.weekbrowser.navi.model.Job;
@@ -30,7 +31,7 @@ public class MonitorAgent {
     private final String urlMonitor;
     private final Pattern triggerMonitor;
     private final String sessionId;
-    private final String cookieList;
+    private final BrowserCookieProvider cookieProvider;
     private final long monitorIntervalMillis;
     private final AutomationEventEmitter emitter;
 
@@ -42,7 +43,7 @@ public class MonitorAgent {
             String urlMonitor,
             String triggerMonitorRegex,
             String sessionId,
-            String cookieList,
+            BrowserCookieProvider cookieProvider,
             long monitorIntervalMillis,
             AutomationEventEmitter emitter
     ) {
@@ -56,7 +57,7 @@ public class MonitorAgent {
         }
         this.triggerMonitor = compiledPattern;
         this.sessionId = sessionId != null ? sessionId : "";
-        this.cookieList = cookieList != null ? cookieList : "";
+        this.cookieProvider = cookieProvider != null ? cookieProvider : url -> "";
         this.monitorIntervalMillis = monitorIntervalMillis > 0 ? monitorIntervalMillis : 5000L;
         this.emitter = emitter;
     }
@@ -125,17 +126,16 @@ public class MonitorAgent {
 
     private List<JobPayload> fetchApiChanges() throws Exception {
         String effectiveSessionId = (sessionId.isEmpty() ? "0" : sessionId);
-        String formattedUrl = urlMonitor.contains("%")
-                ? String.format(urlMonitor, effectiveSessionId)
-                : urlMonitor;
+        String formattedUrl = formatMonitorUrl(urlMonitor, effectiveSessionId);
 
         URL url = new URL(formattedUrl);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
         conn.setConnectTimeout(15000);
         conn.setReadTimeout(15000);
-        if (!cookieList.isEmpty()) {
-            conn.setRequestProperty("Cookie", cookieList);
+        String cookies = cookieProvider.getCookieHeader(formattedUrl);
+        if (cookies != null && !cookies.isEmpty()) {
+            conn.setRequestProperty("Cookie", cookies);
         }
 
         int responseCode = conn.getResponseCode();
@@ -202,6 +202,55 @@ public class MonitorAgent {
         }
 
         return listaJobPayload;
+    }
+
+    /**
+     * Mirrors the iOS String(format:) session substitution while accepting the
+     * Java-style %s placeholder used by earlier Android configs. Other percent
+     * sequences (for example URL escapes such as %2F) are kept intact.
+     */
+    public static String formatMonitorUrl(String template, String sessionValue) {
+        if (template == null || template.isEmpty()) return template != null ? template : "";
+        String replacement = sessionValue != null ? sessionValue : "";
+        StringBuilder formatted = new StringBuilder(template.length() + replacement.length());
+
+        for (int i = 0; i < template.length();) {
+            if (template.charAt(i) != '%' || i + 1 >= template.length()) {
+                formatted.append(template.charAt(i++));
+                continue;
+            }
+
+            if (template.charAt(i + 1) == '%') {
+                formatted.append('%');
+                i += 2;
+                continue;
+            }
+
+            int specifierIndex = i + 1;
+            int digitsEnd = specifierIndex;
+            while (digitsEnd < template.length() && Character.isDigit(template.charAt(digitsEnd))) {
+                digitsEnd++;
+            }
+            if (digitsEnd > specifierIndex && digitsEnd + 1 < template.length()
+                    && template.charAt(digitsEnd) == '$'
+                    && (template.charAt(digitsEnd + 1) == '@' || template.charAt(digitsEnd + 1) == 's')) {
+                formatted.append(replacement);
+                i = digitsEnd + 2;
+                continue;
+            }
+
+            char specifier = template.charAt(specifierIndex);
+            if (specifier == '@' || specifier == 's') {
+                formatted.append(replacement);
+                i = specifierIndex + 1;
+            } else {
+                // Keep unrecognized percent sequences literally; URL-encoded
+                // bytes such as %2F must not be interpreted as format tokens.
+                formatted.append('%');
+                i++;
+            }
+        }
+        return formatted.toString();
     }
 
     private String treatCode(String codigo) {

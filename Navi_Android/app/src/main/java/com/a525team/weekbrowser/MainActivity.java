@@ -1,6 +1,7 @@
 package com.a525team.weekbrowser;
 
 import com.a525team.weekbrowser.navi.ui.NaviSheetView;
+import com.a525team.weekbrowser.navi.core.NaviDataStore;
 
 import android.animation.*;
 import android.animation.Animator;
@@ -267,6 +268,9 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle _savedInstanceState) {
 		super.onCreate(_savedInstanceState);
+		NaviDataStore naviDataStore = new NaviDataStore(this);
+		naviDataStore.clearLog();
+		naviDataStore.clearProcessed();
 		ThemeManager.applyTheme(this);
 		setContentView(R.layout.main);
 		initialize(_savedInstanceState);
@@ -357,6 +361,20 @@ public class MainActivity extends Activity {
 				naviSheetView.setBrowserSession(new com.a525team.weekbrowser.navi.browser.WeekBrowserWebViewAdapter(tabTag, activeWv));
 			}
 		};
+		naviSheetView.setBrowserSessionResolver(new NaviSheetView.BrowserSessionResolver() {
+			@Override
+			public String getActiveTabId() {
+				return getCurrentTabTag();
+			}
+
+			@Override
+			public com.a525team.weekbrowser.navi.browser.NaviBrowserSession resolve(String tabTag) {
+				WebView activeWv = ResourceManager.getInstance().getWebViewForTab(tabTag);
+				return activeWv != null
+						? new com.a525team.weekbrowser.navi.browser.WeekBrowserWebViewAdapter(tabTag, activeWv)
+						: null;
+			}
+		});
 		ensureSessionBound.run();
 
 		View.OnClickListener toggleSheetListener = view -> {
@@ -402,6 +420,11 @@ public class MainActivity extends Activity {
 		if (buttonBookmarks != null) {
 			buttonBookmarks.setContentDescription(getString(R.string.bookmarks));
 			buttonBookmarks.setOnClickListener(v -> _webViewActions(-1, ""));
+		}
+		SkinButton buttonTabs = findViewById(R.id.buttonTabs);
+		if (buttonTabs != null) {
+			buttonTabs.setContentDescription(getString(R.string.tabs));
+			buttonTabs.setOnClickListener(v -> _webViewActions(-5, ""));
 		}
 
 		if (openpanel != null) openpanel.setVisibility(View.GONE);

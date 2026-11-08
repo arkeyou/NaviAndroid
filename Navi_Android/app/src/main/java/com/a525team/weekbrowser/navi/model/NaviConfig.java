@@ -23,6 +23,7 @@ public final class NaviConfig {
     private AutomationScript secondaryAction = null;
 
     // Core / Session
+    private String sessionId = "";
     private String urlSessionInfo = null;
     private String urlSessionIdentifier = null;
 
@@ -46,6 +47,7 @@ public final class NaviConfig {
         config.triggerMonitor = json.optString("triggerMonitor", "");
         config.urlFlow = json.isNull("urlFlow") ? null : json.optString("urlFlow", "");
         config.urlAction = json.optString("urlAction", "");
+        config.sessionId = json.optString("sessionId", "");
 
         if (json.has("mainVerify") && !json.isNull("mainVerify")) {
             config.mainVerify = AutomationScript.fromJson(json.optJSONObject("mainVerify"));
@@ -53,11 +55,15 @@ public final class NaviConfig {
         if (json.has("mainAction") && !json.isNull("mainAction")) {
             config.mainAction = AutomationScript.fromJson(json.optJSONObject("mainAction"));
         }
-        if (json.has("secondaryVerify") && !json.isNull("secondaryVerify")) {
-            config.secondaryVerify = AutomationScript.fromJson(json.optJSONObject("secondaryVerify"));
+        JSONObject secondaryVerifyJson = json.optJSONObject("secondaryVerify");
+        if (secondaryVerifyJson == null) secondaryVerifyJson = json.optJSONObject("secondVerify");
+        if (secondaryVerifyJson != null) {
+            config.secondaryVerify = AutomationScript.fromJson(secondaryVerifyJson);
         }
-        if (json.has("secondaryAction") && !json.isNull("secondaryAction")) {
-            config.secondaryAction = AutomationScript.fromJson(json.optJSONObject("secondaryAction"));
+        JSONObject secondaryActionJson = json.optJSONObject("secondaryAction");
+        if (secondaryActionJson == null) secondaryActionJson = json.optJSONObject("secondAction");
+        if (secondaryActionJson != null) {
+            config.secondaryAction = AutomationScript.fromJson(secondaryActionJson);
         }
 
         config.urlSessionInfo = json.isNull("urlSessionInfo") ? null : json.optString("urlSessionInfo", null);
@@ -72,6 +78,7 @@ public final class NaviConfig {
         json.put("triggerMonitor", triggerMonitor);
         if (urlFlow != null) json.put("urlFlow", urlFlow);
         json.put("urlAction", urlAction);
+        if (sessionId != null && !sessionId.isEmpty()) json.put("sessionId", sessionId);
 
         if (mainVerify != null) json.put("mainVerify", mainVerify.toJson());
         if (mainAction != null) json.put("mainAction", mainAction.toJson());
@@ -152,6 +159,14 @@ public final class NaviConfig {
         return urlSessionInfo;
     }
 
+    public String getSessionId() {
+        return sessionId;
+    }
+
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId != null ? sessionId : "";
+    }
+
     public void setUrlSessionInfo(String urlSessionInfo) {
         this.urlSessionInfo = urlSessionInfo;
     }
@@ -173,6 +188,7 @@ public final class NaviConfig {
                 Objects.equals(triggerMonitor, that.triggerMonitor) &&
                 Objects.equals(urlFlow, that.urlFlow) &&
                 Objects.equals(urlAction, that.urlAction) &&
+                Objects.equals(sessionId, that.sessionId) &&
                 Objects.equals(mainVerify, that.mainVerify) &&
                 Objects.equals(mainAction, that.mainAction) &&
                 Objects.equals(secondaryVerify, that.secondaryVerify) &&
@@ -184,6 +200,7 @@ public final class NaviConfig {
     @Override
     public int hashCode() {
         return Objects.hash(urlMonitor, triggerMonitor, urlFlow, urlAction,
+                sessionId,
                 mainVerify, mainAction, secondaryVerify, secondaryAction,
                 urlSessionInfo, urlSessionIdentifier);
     }

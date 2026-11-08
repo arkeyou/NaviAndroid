@@ -18,6 +18,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.a525team.weekbrowser.navi.browser.NaviBrowserSession;
+import com.a525team.weekbrowser.navi.browser.WeekBrowserCookieProvider;
 import com.a525team.weekbrowser.navi.browser.WeekBrowserWebViewAdapter;
 import com.a525team.weekbrowser.navi.core.AutomationManager;
 import com.a525team.weekbrowser.navi.core.NaviDataStore;
@@ -221,7 +222,7 @@ public class NaviActivity extends Activity {
         statusView.setText("Automação em execução...");
         statusView.setTextColor(Color.parseColor("#2196F3"));
 
-        automationManager.start(configJson, "", "", 5.0);
+        automationManager.start(configJson, "", new WeekBrowserCookieProvider(), 5.0);
     }
 
     private void stopAutomation() {

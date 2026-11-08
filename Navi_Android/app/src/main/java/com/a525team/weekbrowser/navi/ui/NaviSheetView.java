@@ -1,6 +1,7 @@
 package com.a525team.weekbrowser.navi.ui;
 
 import android.content.Context;
+import android.view.inputmethod.InputMethodManager;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Handler;
@@ -14,14 +15,27 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.a525team.weekbrowser.navi.browser.NaviBrowserSession;
+import com.a525team.weekbrowser.navi.browser.WeekBrowserCookieProvider;
 import com.a525team.weekbrowser.navi.core.AutomationManager;
 import com.a525team.weekbrowser.navi.core.NaviDataStore;
+import com.a525team.weekbrowser.navi.core.NpointConfigLoader;
 import com.a525team.weekbrowser.navi.model.ActionEvent;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Queue;
 
 public class NaviSheetView extends LinearLayout {
+
+    public interface BrowserSessionResolver {
+        String getActiveTabId();
+
+        NaviBrowserSession resolve(String tabId);
+    }
 
     public enum TabSelection {
         SCRIPT, LOG, PROCESSED
@@ -31,6 +45,7 @@ public class NaviSheetView extends LinearLayout {
     private final NaviDataStore dataStore;
     private final AutomationManager automationManager;
     private NaviBrowserSession browserSession;
+    private BrowserSessionResolver browserSessionResolver;
     private NaviBrowserSession.Cancellable navigationObserver;
 
     private TabSelection currentTab = TabSelection.SCRIPT;
@@ -49,6 +64,7 @@ public class NaviSheetView extends LinearLayout {
     // Script View componentes
     private EditText configEditor;
     private Button startStopBtn;
+    private final List<Button> startStopButtons = new ArrayList<>();
     private Button settingsBtn;
 
     // Log View componentes
@@ -65,6 +81,9 @@ public class NaviSheetView extends LinearLayout {
     private boolean isProcessingPage = false;
     private boolean isPageFullyLoaded = false;
     private int verifyAttemptCount = 0;
+    private boolean isStarting = false;
+    private int startGeneration = 0;
+    private Thread configLoadThread;
 
     public NaviSheetView(Context context) {
         super(context);
@@ -113,6 +132,19 @@ public class NaviSheetView extends LinearLayout {
                 }
             });
         }
+    }
+
+    public void setBrowserSessionResolver(BrowserSessionResolver resolver) {
+        this.browserSessionResolver = resolver;
+        bindToCurrentTab();
+    }
+
+    private void bindToCurrentTab() {
+        if (browserSessionResolver == null) return;
+        String activeTabId = browserSessionResolver.getActiveTabId();
+        if (activeTabId == null || activeTabId.trim().isEmpty()) return;
+        if (browserSession != null && activeTabId.equals(browserSession.getTabId())) return;
+        setBrowserSession(browserSessionResolver.resolve(activeTabId));
     }
 
     private void initView() {
@@ -211,12 +243,28 @@ public class NaviSheetView extends LinearLayout {
         actionRowParams.topMargin = p / 2;
 
         startStopBtn = new Button(getContext());
-        startStopBtn.setText("Iniciar Automação");
-        startStopBtn.setBackgroundColor(Color.parseColor("#1B5E20"));
-        startStopBtn.setTextColor(Color.WHITE);
-        startStopBtn.setOnClickListener(v -> toggleAutomation());
+        configureStartStopButton(startStopBtn);
         LayoutParams startParams = new LayoutParams(0, LayoutParams.MATCH_PARENT, 1f);
         actionRow.addView(startStopBtn, startParams);
+
+        Button hideKeyboardBtn = new Button(getContext());
+        hideKeyboardBtn.setText("⌄");
+        hideKeyboardBtn.setTextSize(20);
+        hideKeyboardBtn.setTextColor(Color.WHITE);
+        hideKeyboardBtn.setBackgroundColor(Color.parseColor("#333333"));
+        hideKeyboardBtn.setPadding(0, 0, 0, 0);
+        hideKeyboardBtn.setContentDescription("Ocultar teclado");
+        hideKeyboardBtn.setOnClickListener(v -> {
+            InputMethodManager inputMethodManager = (InputMethodManager)
+                    getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (inputMethodManager != null) {
+                inputMethodManager.hideSoftInputFromWindow(configEditor.getWindowToken(), 0);
+            }
+        });
+        LayoutParams hideKeyboardParams = new LayoutParams(
+                (int) (44 * getResources().getDisplayMetrics().density), LayoutParams.MATCH_PARENT);
+        hideKeyboardParams.leftMargin = p / 2;
+        actionRow.addView(hideKeyboardBtn, hideKeyboardParams);
 
         settingsBtn = new Button(getContext());
         settingsBtn.setText("⚙");
@@ -249,15 +297,19 @@ public class NaviSheetView extends LinearLayout {
         logScrollView.addView(logTextView, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
         logViewContainer.addView(logScrollView, new LayoutParams(LayoutParams.MATCH_PARENT, 0, 1f));
 
-        Button clearLogBtn = new Button(getContext());
-        clearLogBtn.setText("Limpar Log");
+        LinearLayout actionRow = createAuxiliaryActionRow();
+        Button logStartStopBtn = new Button(getContext());
+        configureStartStopButton(logStartStopBtn);
+        actionRow.addView(logStartStopBtn, new LayoutParams(0, LayoutParams.MATCH_PARENT, 1f));
+
+        Button clearLogBtn = createClearButton("Limpar log");
+        clearLogBtn.setText("🗑");
         clearLogBtn.setOnClickListener(v -> {
             dataStore.clearLog();
             logTextView.setText("");
         });
-        LayoutParams clearParams = new LayoutParams(LayoutParams.MATCH_PARENT, (int) (38 * getResources().getDisplayMetrics().density));
-        clearParams.topMargin = p / 2;
-        logViewContainer.addView(clearLogBtn, clearParams);
+        actionRow.addView(clearLogBtn, iconButtonParams(p));
+        logViewContainer.addView(actionRow, auxiliaryActionParams(p));
     }
 
     private void createProcessedView(int p) {
@@ -275,21 +327,75 @@ public class NaviSheetView extends LinearLayout {
         processedScrollView.addView(processedTextView, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
         processedViewContainer.addView(processedScrollView, new LayoutParams(LayoutParams.MATCH_PARENT, 0, 1f));
 
-        Button clearProcBtn = new Button(getContext());
-        clearProcBtn.setText("Limpar Processados");
+        LinearLayout actionRow = createAuxiliaryActionRow();
+        Button processedStartStopBtn = new Button(getContext());
+        configureStartStopButton(processedStartStopBtn);
+        actionRow.addView(processedStartStopBtn, new LayoutParams(0, LayoutParams.MATCH_PARENT, 1f));
+
+        Button clearProcBtn = createClearButton("Limpar processados");
+        clearProcBtn.setText("🧹");
         clearProcBtn.setOnClickListener(v -> {
             dataStore.clearProcessed();
             processedTextView.setText("");
         });
-        LayoutParams clearParams = new LayoutParams(LayoutParams.MATCH_PARENT, (int) (38 * getResources().getDisplayMetrics().density));
-        clearParams.topMargin = p / 2;
-        processedViewContainer.addView(clearProcBtn, clearParams);
+        actionRow.addView(clearProcBtn, iconButtonParams(p));
+        processedViewContainer.addView(actionRow, auxiliaryActionParams(p));
+    }
+
+    private void configureStartStopButton(Button button) {
+        button.setTextColor(Color.WHITE);
+        button.setOnClickListener(v -> toggleAutomation());
+        startStopButtons.add(button);
+        syncStartStopButtons();
+    }
+
+    private void syncStartStopButtons() {
+        boolean running = automationManager.isRunning() || isStarting;
+        String label = running ? "Parar Automação" : "Iniciar Automação";
+        int color = Color.parseColor(running ? "#B71C1C" : "#1B5E20");
+        for (Button button : startStopButtons) {
+            button.setText(label);
+            button.setBackgroundColor(color);
+        }
+    }
+
+    private LinearLayout createAuxiliaryActionRow() {
+        LinearLayout row = new LinearLayout(getContext());
+        row.setOrientation(HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        return row;
+    }
+
+    private Button createClearButton(String description) {
+        Button button = new Button(getContext());
+        button.setTextSize(18);
+        button.setTextColor(Color.WHITE);
+        button.setBackgroundColor(Color.parseColor("#333333"));
+        button.setPadding(0, 0, 0, 0);
+        button.setContentDescription(description);
+        return button;
+    }
+
+    private LayoutParams iconButtonParams(int padding) {
+        LayoutParams params = new LayoutParams((int) (44 * getResources().getDisplayMetrics().density), LayoutParams.MATCH_PARENT);
+        params.leftMargin = padding / 2;
+        return params;
+    }
+
+    private LayoutParams auxiliaryActionParams(int padding) {
+        LayoutParams params = new LayoutParams(LayoutParams.MATCH_PARENT, (int) (40 * getResources().getDisplayMetrics().density));
+        params.topMargin = padding / 2;
+        return params;
     }
 
     private void setupAutomationListeners() {
         automationManager.addListener(event -> mainHandler.post(() -> {
             if (event instanceof ActionEvent.SendMsg) {
                 ActionEvent.SendMsg msg = (ActionEvent.SendMsg) event;
+                if (msg.getMessage().startsWith("Session Warning:")
+                        || msg.getMessage().startsWith("Session Error:")) {
+                    selectTab(TabSelection.LOG);
+                }
                 appendLog(msg.getMessage(), msg.isLineBreak());
                 if (msg.isStop()) {
                     stopAutomation();
@@ -306,6 +412,7 @@ public class NaviSheetView extends LinearLayout {
             } else if (event instanceof ActionEvent.OpenPage) {
                 ActionEvent.OpenPage open = (ActionEvent.OpenPage) event;
                 appendLog("Abrindo URL base: " + open.getUrl(), true);
+                bindToCurrentTab();
                 if (browserSession != null) {
                     browserSession.loadUrl(open.getUrl());
                 }
@@ -314,7 +421,7 @@ public class NaviSheetView extends LinearLayout {
     }
 
     private void toggleAutomation() {
-        if (automationManager.isRunning()) {
+        if (automationManager.isRunning() || isStarting) {
             stopAutomation();
         } else {
             startAutomation();
@@ -329,22 +436,153 @@ public class NaviSheetView extends LinearLayout {
         isProcessingPage = false;
         isPageFullyLoaded = false;
         currentPage = null;
-        startStopBtn.setText("Parar Automação");
-        startStopBtn.setBackgroundColor(Color.parseColor("#B71C1C"));
+        syncStartStopButtons();
 
-        double monitorInterval = dataStore.getMonitorInterval();
-        automationManager.start(configJson, "", "", monitorInterval);
+        String trimmedScript = configJson.trim();
+        if (trimmedScript.startsWith("javascript:")) {
+            executeJavascriptScript(trimmedScript.substring("javascript:".length()));
+            return;
+        }
+
+        final JSONObject scriptObject;
+        try {
+            scriptObject = new JSONObject(configJson);
+        } catch (JSONException ignored) {
+            // Scripts JSON legados continuam sendo encaminhados ao parser atual para
+            // preservar os erros e a compatibilidade já existentes.
+            startWithConfig(configJson);
+            return;
+        }
+
+        if (NpointConfigLoader.isNpointWrapper(scriptObject)) {
+            resolveNpointAndStart(scriptObject);
+            return;
+        }
+
+        startWithConfig(configJson);
+    }
+
+    private void startWithConfig(String configJson) {
+        final int generation = ++startGeneration;
+        isStarting = true;
+        syncStartStopButtons();
+        configLoadThread = new Thread(() -> {
+            try {
+                automationManager.start(configJson, "", new WeekBrowserCookieProvider(), dataStore.getMonitorInterval(),
+                        dataStore.getMonitorLiveOnlineInterval());
+            } catch (Exception e) {
+                mainHandler.post(() -> {
+                    if (generation != startGeneration || !isStarting) return;
+                    appendLog("Falha ao iniciar automação: " + safeErrorMessage(e), true);
+                    resetStartButton();
+                });
+            } finally {
+                mainHandler.post(() -> {
+                    if (generation != startGeneration || !isStarting) return;
+                    isStarting = false;
+                    configLoadThread = null;
+                    syncStartStopButtons();
+                });
+            }
+        }, "navi-automation-start");
+        configLoadThread.setDaemon(true);
+        configLoadThread.start();
+    }
+
+    private void resolveNpointAndStart(JSONObject wrapper) {
+        final int generation = ++startGeneration;
+        isStarting = true;
+        syncStartStopButtons();
+        appendLog("Buscando configuração criptografada no nPoint...", true);
+
+        configLoadThread = new Thread(() -> {
+            try {
+                String resolvedConfig = NpointConfigLoader.resolve(wrapper);
+                String wrapperSessionId = wrapper.optString("sessionId", "");
+                if (!wrapperSessionId.trim().isEmpty()) {
+                    JSONObject resolvedJson = new JSONObject(resolvedConfig);
+                    resolvedJson.put("sessionId", wrapperSessionId);
+                    resolvedConfig = resolvedJson.toString();
+                }
+                final String configToStart = resolvedConfig;
+                mainHandler.post(() -> {
+                    if (generation != startGeneration || !isStarting) return;
+                    isStarting = false;
+                    configLoadThread = null;
+                    syncStartStopButtons();
+                    appendLog("Configuração nPoint carregada.", true);
+                    startWithConfig(configToStart);
+                });
+            } catch (Exception e) {
+                mainHandler.post(() -> {
+                    if (generation != startGeneration || !isStarting) return;
+                    isStarting = false;
+                    configLoadThread = null;
+                    appendLog("Falha ao carregar configuração nPoint: " + safeErrorMessage(e), true);
+                    resetStartButton();
+                });
+            }
+        }, "navi-npoint-config");
+        configLoadThread.start();
+    }
+
+    private void executeJavascriptScript(String javascript) {
+        if (javascript.trim().isEmpty()) {
+            appendLog("O script JavaScript está vazio.", true);
+            resetStartButton();
+            return;
+        }
+        if (browserSession == null) {
+            appendLog("Não há uma aba do navegador disponível para executar JavaScript.", true);
+            resetStartButton();
+            return;
+        }
+
+        final int generation = ++startGeneration;
+        isStarting = true;
+        syncStartStopButtons();
+        appendLog("Executando script JavaScript...", true);
+        browserSession.evaluateJavaScript(javascript, 60000L, result -> mainHandler.post(() -> {
+            if (generation != startGeneration || !isStarting) return;
+            isStarting = false;
+            if (result.isSuccess()) {
+                appendLog("Script JavaScript executado.", true);
+                if (result.getValue() != null) {
+                    appendLog("Resultado: " + result.getValue(), true);
+                }
+            } else {
+                appendLog("Falha ao executar JavaScript: " + result.getDetail(), true);
+            }
+            resetStartButton();
+        }));
+    }
+
+    private String safeErrorMessage(Exception error) {
+        String message = error.getMessage();
+        return message != null && !message.trim().isEmpty()
+                ? message
+                : error.getClass().getSimpleName();
+    }
+
+    private void resetStartButton() {
+        isStarting = false;
+        syncStartStopButtons();
     }
 
     public void stopAutomation() {
+        startGeneration++;
+        isStarting = false;
+        if (configLoadThread != null) {
+            configLoadThread.interrupt();
+            configLoadThread = null;
+        }
         automationManager.stop();
         mainHandler.removeCallbacksAndMessages(null);
         pageQueue.clear();
         isProcessingPage = false;
         isPageFullyLoaded = false;
         currentPage = null;
-        startStopBtn.setText("Iniciar Automação");
-        startStopBtn.setBackgroundColor(Color.parseColor("#1B5E20"));
+        resetStartButton();
     }
 
     public boolean isAutomationRunning() {
@@ -352,6 +590,7 @@ public class NaviSheetView extends LinearLayout {
     }
 
     private void processNextPage() {
+        bindToCurrentTab();
         if (!automationManager.isRunning() || isProcessingPage || pageQueue.isEmpty() || browserSession == null) {
             return;
         }
@@ -433,23 +672,21 @@ public class NaviSheetView extends LinearLayout {
                 int maxAttempts = (int) (dataStore.getPageWaitInterval() / (likeWaitMs / 1000.0));
                 if (maxAttempts < 5) maxAttempts = 10;
 
-                if (verifyAttemptCount < maxAttempts) {
-                    appendLog("·", false);
+                String verify2 = activePage.getScriptVerify2();
+                if (verify2 != null && !verify2.trim().isEmpty()) {
+                    pollSecondaryVerification(activePage.getScript2(), verifyAttemptCount, maxAttempts);
+                } else if (verifyAttemptCount < maxAttempts) {
+                    appendLog(".", false);
                     mainHandler.postDelayed(this::pollVerification, likeWaitMs);
                 } else {
-                    String verify2 = activePage.getScriptVerify2();
-                    if (verify2 != null && !verify2.trim().isEmpty()) {
-                        pollSecondaryVerification(activePage.getScript2(), 0);
-                    } else {
-                        appendLog("\nElemento não encontrado na página após espera. Avançando.", true);
-                        finishCurrentPage();
-                    }
+                    appendLog("\nElemento não encontrado na página após espera. Avançando.", true);
+                    finishCurrentPage();
                 }
             }
         }));
     }
 
-    private void pollSecondaryVerification(String action2Script, int attempt) {
+    private void pollSecondaryVerification(String action2Script, int mainAttempt, int maxAttempts) {
         if (!automationManager.isRunning() || !isProcessingPage || currentPage == null || browserSession == null) {
             return;
         }
@@ -479,13 +716,18 @@ public class NaviSheetView extends LinearLayout {
             if (isCondition2Met && action2Script != null && !action2Script.trim().isEmpty()) {
                 appendLog("Encontrou! Executou 2a ação!", true);
                 executeAction(action2Script);
-            } else if (attempt < 5) {
-                long likeWaitMs = (long) (dataStore.getLikeWaitInterval() * 1000);
-                if (likeWaitMs < 500) likeWaitMs = 500L;
-                mainHandler.postDelayed(() -> pollSecondaryVerification(action2Script, attempt + 1), likeWaitMs);
-            } else {
-                appendLog("\nCondição secundária não atendida. Avançando.", true);
+            } else if (isCondition2Met) {
                 finishCurrentPage();
+            } else {
+                appendLog(".", false);
+                if (mainAttempt < maxAttempts) {
+                    long likeWaitMs = (long) (dataStore.getLikeWaitInterval() * 1000);
+                    if (likeWaitMs < 500) likeWaitMs = 500L;
+                    mainHandler.postDelayed(this::pollVerification, likeWaitMs);
+                } else {
+                    appendLog("\nCondição secundária não atendida. Avançando.", true);
+                    finishCurrentPage();
+                }
             }
         }));
     }
