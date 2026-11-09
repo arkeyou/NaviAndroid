@@ -426,17 +426,6 @@ public class MainActivity extends Activity {
 			});
 		}
 
-		SkinButton buttonNavForward = findViewById(R.id.buttonNavForward);
-		if (buttonNavForward != null) {
-			buttonNavForward.setContentDescription("Avançar");
-			buttonNavForward.setOnClickListener(v -> {
-				String tabTag = getCurrentTabTag();
-				WebView activeWv = tabTag != null ? ResourceManager.getInstance().getWebViewForTab(tabTag) : null;
-				if (activeWv != null && activeWv.canGoForward()) {
-					activeWv.goForward();
-				}
-			});
-		}
 		SkinButton buttonBookmarks = findViewById(R.id.buttonBookmarks);
 		if (buttonBookmarks != null) {
 			buttonBookmarks.setContentDescription(getString(R.string.bookmarks));

@@ -178,6 +178,17 @@ Estados: `[ ]` Não iniciado · `[-]` Em andamento · `[x]` Concluído e validad
 - [x] Reproduzir a vibração de aviso após cada verificação principal/secundária e a vibração de erro ao parar, como no iOS.
 - **Resultado:** `NaviSheetView` publica transições de estado e usa feedback háptico Android sem permissão de vibração; `MainActivity` aplica a cor ao ícone da prancheta.
 
+### AND-EXTRA — Remover o botão Avançar da barra de endereço
+- [x] Remover o botão Avançar da barra superior sem alterar os demais controles.
+- **Resultado:** removidos o botão e seu listener dedicado na barra de endereço.
+
+### AND-EXTRA — Badges e troca automática para Log
+- [x] Ao iniciar automação, selecionar a aba Log.
+- [x] Exibir `!` ao receber mensagens de log enquanto outra aba está ativa.
+- [x] Exibir a quantidade de registros processados na badge quando a aba Processados não estiver ativa.
+- [x] Montar cada item Processados como `codigo - username`, igual ao Navi_iOS.
+- **Resultado:** `NaviSheetView` mostra badges nas abas inativas e passa a persistir código e username no mesmo formato do iOS.
+
 ### AND-EXTRA — Ações compartilhadas nas abas do painel NAVI
 - [x] Exibir Iniciar/Parar Automação em Script, Log e Processados, refletindo o mesmo estado.
 - [x] Trocar os botões largos de limpeza por ícones compactos ao lado de Iniciar/Parar.
@@ -289,3 +300,4 @@ Estados: `[ ]` Não iniciado · `[-]` Em andamento · `[x]` Concluído e validad
 
 ## Próxima tarefa
 Validar AND-EXTRA manualmente no AJ-C57/API 29: (1) log sem timestamp, (2) aba inicial com logo monocromático Navi ao reiniciar, (3) botão ☆ abre BookmarksActivity. Após confirmação do usuário, marcar AND-EXTRA como [x] e avançar para AND-030 (abas e janelas).
+

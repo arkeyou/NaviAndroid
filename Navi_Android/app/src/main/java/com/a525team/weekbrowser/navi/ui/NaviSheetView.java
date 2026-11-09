@@ -60,6 +60,9 @@ public class NaviSheetView extends LinearLayout {
     private Button tabScriptBtn;
     private Button tabLogBtn;
     private Button tabProcessedBtn;
+    private TextView logBadge;
+    private TextView processedBadge;
+    private int processedRecordCount = 0;
 
     // Conteúdo das Abas
     private FrameLayout tabContentContainer;
@@ -186,14 +189,17 @@ public class NaviSheetView extends LinearLayout {
         tabScriptBtn = createTabButton("Script");
         tabLogBtn = createTabButton("Log");
         tabProcessedBtn = createTabButton("Processados");
+        logBadge = createBadge();
+        processedBadge = createBadge();
 
         tabScriptBtn.setOnClickListener(v -> selectTab(TabSelection.SCRIPT));
         tabLogBtn.setOnClickListener(v -> selectTab(TabSelection.LOG));
         tabProcessedBtn.setOnClickListener(v -> selectTab(TabSelection.PROCESSED));
 
-        tabBar.addView(tabScriptBtn, new LayoutParams(0, (int) (36 * getResources().getDisplayMetrics().density), 1f));
-        tabBar.addView(tabLogBtn, new LayoutParams(0, (int) (36 * getResources().getDisplayMetrics().density), 1f));
-        tabBar.addView(tabProcessedBtn, new LayoutParams(0, (int) (36 * getResources().getDisplayMetrics().density), 1f));
+        int tabHeight = (int) (36 * getResources().getDisplayMetrics().density);
+        tabBar.addView(createTabItem(tabScriptBtn, null), new LayoutParams(0, tabHeight, 1f));
+        tabBar.addView(createTabItem(tabLogBtn, logBadge), new LayoutParams(0, tabHeight, 1f));
+        tabBar.addView(createTabItem(tabProcessedBtn, processedBadge), new LayoutParams(0, tabHeight, 1f));
 
         addView(tabBar, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
@@ -224,8 +230,42 @@ public class NaviSheetView extends LinearLayout {
         return btn;
     }
 
+    private FrameLayout createTabItem(Button button, TextView badge) {
+        FrameLayout item = new FrameLayout(getContext());
+        item.addView(button, new FrameLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+        if (badge != null) {
+            FrameLayout.LayoutParams badgeParams = new FrameLayout.LayoutParams(
+                    LayoutParams.WRAP_CONTENT, (int) (18 * getResources().getDisplayMetrics().density), Gravity.TOP | Gravity.END);
+            badgeParams.topMargin = (int) (1 * getResources().getDisplayMetrics().density);
+            badgeParams.rightMargin = (int) (8 * getResources().getDisplayMetrics().density);
+            item.addView(badge, badgeParams);
+        }
+        return item;
+    }
+
+    private TextView createBadge() {
+        TextView badge = new TextView(getContext());
+        badge.setTextColor(Color.WHITE);
+        badge.setTextSize(10);
+        badge.setTypeface(null, Typeface.BOLD);
+        badge.setGravity(Gravity.CENTER);
+        badge.setPadding((int) (5 * getResources().getDisplayMetrics().density), 0,
+                (int) (5 * getResources().getDisplayMetrics().density), 0);
+        android.graphics.drawable.GradientDrawable background = new android.graphics.drawable.GradientDrawable();
+        background.setColor(Color.parseColor("#E53935"));
+        background.setCornerRadius((int) (9 * getResources().getDisplayMetrics().density));
+        badge.setBackground(background);
+        badge.setVisibility(GONE);
+        return badge;
+    }
+
     private void selectTab(TabSelection tab) {
         currentTab = tab;
+
+        if (tab == TabSelection.LOG && logBadge != null) logBadge.setVisibility(GONE);
+        if (tab == TabSelection.PROCESSED && processedBadge != null) {
+            processedBadge.setVisibility(GONE);
+        }
 
         tabScriptBtn.setTextColor(tab == TabSelection.SCRIPT ? Color.parseColor("#2196F3") : Color.parseColor("#888888"));
         tabLogBtn.setTextColor(tab == TabSelection.LOG ? Color.parseColor("#2196F3") : Color.parseColor("#888888"));
@@ -360,6 +400,8 @@ public class NaviSheetView extends LinearLayout {
         clearProcBtn.setText("🧹");
         clearProcBtn.setOnClickListener(v -> {
             dataStore.clearProcessed();
+            processedRecordCount = 0;
+            processedBadge.setVisibility(GONE);
             processedTextView.setText("");
         });
         actionRow.addView(clearProcBtn, iconButtonParams(p));
@@ -427,9 +469,13 @@ public class NaviSheetView extends LinearLayout {
             } else if (event instanceof ActionEvent.EnqueuePage) {
                 ActionEvent.EnqueuePage page = (ActionEvent.EnqueuePage) event;
                 appendLog("Enfileirado: " + page.getCodigo() + " -> " + page.getUrl(), true);
-                dataStore.appendProcessed(page.getCodigo() + " | " + page.getUrl());
+                dataStore.appendProcessed(page.getCodigo() + " - " + page.getUsername());
+                processedRecordCount++;
                 if (currentTab == TabSelection.PROCESSED) {
                     processedTextView.setText(dataStore.readProcessed());
+                } else {
+                    processedBadge.setText(String.valueOf(processedRecordCount));
+                    processedBadge.setVisibility(VISIBLE);
                 }
                 pageQueue.offer(page);
                 processNextPage();
@@ -453,6 +499,7 @@ public class NaviSheetView extends LinearLayout {
     }
 
     public void startAutomation() {
+        selectTab(TabSelection.LOG);
         publishAutomationState(true);
         String configJson = configEditor.getText().toString();
         dataStore.saveConfig(configJson);
@@ -810,6 +857,9 @@ public class NaviSheetView extends LinearLayout {
         if (logTextView != null && currentTab == TabSelection.LOG) {
             logTextView.append((lineBreak ? "\n" : "") + message);
             logScrollView.post(() -> logScrollView.fullScroll(FOCUS_DOWN));
+        } else if (logBadge != null) {
+            logBadge.setText("!");
+            logBadge.setVisibility(VISIBLE);
         }
     }
 }
