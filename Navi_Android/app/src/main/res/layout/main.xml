@@ -348,57 +348,103 @@
 		<LinearLayout
 			android:id="@+id/linear1"
 			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
+			android:layout_height="56dp"
 			android:orientation="horizontal"
-			android:layout_gravity="center_horizontal|bottom">
-			<com.a525team.weekbrowser.SkinButton
-				android:id="@+id/buttonNavBack"
-				android:layout_width="38dp"
-				android:layout_height="30dp"
-				android:gravity="center_horizontal|center_vertical"
-				android:text="◀"
-				android:textSize="13sp"
-				app:isSmall="true" />
-			<com.a525team.weekbrowser.SkinButton
-				android:id="@+id/buttonNavForward"
-				android:layout_width="38dp"
-				android:layout_height="30dp"
-				android:gravity="center_horizontal|center_vertical"
-				android:text="▶"
-				android:textSize="13sp"
-				app:isSmall="true" />
+			android:layout_gravity="center_horizontal|bottom"
+			android:layout_marginStart="8dp"
+			android:layout_marginEnd="8dp"
+			android:paddingStart="5dp"
+			android:paddingEnd="5dp"
+			android:paddingTop="5dp"
+			android:paddingBottom="5dp"
+			android:gravity="center_vertical"
+			android:elevation="6dp"
+			android:background="@drawable/toolbar_surface">
 			<com.a525team.weekbrowser.SkinButton
 				android:id="@+id/buttonBookmarks"
-				android:layout_width="38dp"
-				android:layout_height="30dp"
-				android:gravity="center_horizontal|center_vertical"
-				android:text="☆"
-				android:textSize="17sp"
-				app:isSmall="true" />
+				android:layout_width="34dp"
+				android:layout_height="44dp"
+				android:padding="0dp"
+				android:minWidth="0dp"
+				android:minHeight="0dp"
+				android:gravity="center"
+				android:drawableStart="@drawable/ic_toolbar_bookmarks"
+				android:background="@android:color/transparent"
+				app:skinKey="t" />
+			<com.a525team.weekbrowser.SkinButton
+				android:id="@+id/buttonNavBack"
+				android:layout_width="34dp"
+				android:layout_height="44dp"
+				android:padding="0dp"
+				android:minWidth="0dp"
+				android:minHeight="0dp"
+				android:gravity="center"
+				android:drawableStart="@drawable/ic_toolbar_back"
+				android:background="@android:color/transparent"
+				app:skinKey="t" />
+			<com.a525team.weekbrowser.SkinButton
+				android:id="@+id/buttonNavForward"
+				android:layout_width="34dp"
+				android:layout_height="44dp"
+				android:padding="0dp"
+				android:minWidth="0dp"
+				android:minHeight="0dp"
+				android:gravity="center"
+				android:drawableStart="@drawable/ic_toolbar_forward"
+				android:background="@android:color/transparent"
+				app:skinKey="t" />
 			<com.a525team.weekbrowser.SkinButton
 				android:id="@+id/buttonTabs"
-				android:layout_width="38dp"
-				android:layout_height="30dp"
-				android:gravity="center_horizontal|center_vertical"
-				android:text="▢"
-				android:textSize="18sp"
-				app:isSmall="true" />
+				android:layout_width="34dp"
+				android:layout_height="44dp"
+				android:padding="0dp"
+				android:minWidth="0dp"
+				android:minHeight="0dp"
+				android:gravity="center"
+				android:drawableStart="@drawable/ic_toolbar_tabs"
+				android:background="@android:color/transparent"
+				app:skinKey="t" />
 			<com.a525team.weekbrowser.SkinButton
 				android:id="@+id/ssl"
 				android:layout_width="0dp"
 				android:layout_height="0dp"
 				android:visibility="gone" />
-			<com.a525team.weekbrowser.SkinAutoCompleteTextView
-				android:id="@+id/autocomplete1"
+			<LinearLayout
+				android:id="@+id/addressBarContainer"
 				android:layout_width="0dp"
-				android:layout_height="wrap_content"
-				android:padding="8dp"
-				android:textSize="12sp"
-				android:hint="@string/searchbar"
-				android:singleLine="true"
-				android:imeOptions="actionSearch"
+				android:layout_height="42dp"
 				android:layout_weight="1"
-				android:maxLines="5" />
+				android:layout_marginStart="3dp"
+				android:layout_marginEnd="3dp"
+				android:orientation="horizontal"
+				android:gravity="center_vertical"
+				android:paddingStart="12dp"
+				android:paddingEnd="4dp"
+				android:background="@drawable/address_bar_background">
+				<com.a525team.weekbrowser.SkinAutoCompleteTextView
+					android:id="@+id/autocomplete1"
+					android:layout_width="0dp"
+					android:layout_height="match_parent"
+					android:layout_weight="1"
+					android:paddingStart="5dp"
+					android:paddingEnd="2dp"
+					android:background="@android:color/transparent"
+					android:textColor="@color/address_text_color"
+					android:textColorHint="@color/address_hint_color"
+					android:textSize="14sp"
+					android:hint="@string/searchbar"
+					android:singleLine="true"
+					android:imeOptions="actionSearch"
+					android:maxLines="1" />
+				<ImageButton
+					android:id="@+id/addressClearButton"
+					android:layout_width="32dp"
+					android:layout_height="36dp"
+					android:src="@drawable/ic_toolbar_clear"
+					android:background="@android:color/transparent"
+					android:scaleType="center"
+					android:contentDescription="Limpar endereço" />
+			</LinearLayout>
 			<com.a525team.weekbrowser.SkinButton
 				android:id="@+id/hide"
 				android:layout_width="0dp"
@@ -421,21 +467,28 @@
 				android:visibility="gone" />
 			<com.a525team.weekbrowser.SkinButton
 				android:id="@+id/buttonNaviPanel"
-				android:layout_width="38dp"
-				android:layout_height="30dp"
-				android:gravity="center_horizontal|center_vertical"
+				android:layout_width="34dp"
+				android:layout_height="44dp"
+				android:padding="0dp"
+				android:minWidth="0dp"
+				android:minHeight="0dp"
+				android:gravity="center"
 				android:layout_gravity="right"
-				android:text="📋"
-				android:textSize="14sp"
-				app:isSmall="true" />
+				android:drawableStart="@drawable/ic_toolbar_automation"
+				android:background="@android:color/transparent"
+				app:skinKey="t" />
 			<com.a525team.weekbrowser.SkinButton
 				android:id="@+id/button3"
-				android:layout_width="38dp"
-				android:layout_height="30dp"
-				android:gravity="center_horizontal|center_vertical"
+				android:layout_width="34dp"
+				android:layout_height="44dp"
+				android:padding="0dp"
+				android:minWidth="0dp"
+				android:minHeight="0dp"
+				android:gravity="center"
 				android:layout_gravity="right"
-				android:text=""
-				app:isSmall="true" />
+				android:drawableStart="@drawable/ic_toolbar_settings"
+				android:background="@android:color/transparent"
+				app:skinKey="t" />
 		</LinearLayout>
 		<HorizontalScrollView
 			android:id="@+id/hscroll1"

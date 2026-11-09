@@ -158,6 +158,26 @@ Estados: `[ ]` Não iniciado · `[-]` Em andamento · `[x]` Concluído e validad
 
 ## EXTRAS
 
+### AND-EXTRA — Atualizar layout da barra superior
+- [x] Reorganizar a barra com favoritos, voltar/avançar, abas, endereço, painel de automação e ajustes.
+- [x] Aplicar campo de endereço em formato arredondado, com botão para limpar.
+- [x] Adotar ícones vetoriais inspirados na referência sem remover os controles existentes.
+- [x] Remover fundos individuais dos botões e adaptar ícones e superfícies para preto/claro e branco/escuro.
+- [x] Desativar o fundo verde padrão do `SkinButton` e posicionar seus ícones como drawable horizontal centralizado.
+- [x] Usar dark mode como paleta padrão e remover a lupa interna ao campo de endereço.
+- **Resultado:** atualizado `main.xml` e adicionados ícones vetoriais com cor adaptativa; ações existentes continuam nos mesmos controles e o botão de limpar limpa o endereço.
+
+### AND-EXTRA — Atualizar identidade visual do Navi_Android
+- [x] Exibir a tela inicial com fundo cinza e o logo da coleção LaunchIcon do Navi_iOS.
+- [x] Atualizar o ícone padrão Android e seus tamanhos por densidade com o AppIcon do Navi_iOS.
+- [x] Atualizar o ícone adaptativo Android sem remover as opções alternativas de ícone do WeekBrowser.
+- **Resultado:** ativos visuais do iOS foram copiados para o Android; o projeto Navi_iOS permaneceu inalterado.
+
+### AND-EXTRA — Sinalização visual e vibração da automação
+- [x] Manter a prancheta branca no estado inicial, verde durante a automação e vermelha após parar.
+- [x] Reproduzir a vibração de aviso após cada verificação principal/secundária e a vibração de erro ao parar, como no iOS.
+- **Resultado:** `NaviSheetView` publica transições de estado e usa feedback háptico Android sem permissão de vibração; `MainActivity` aplica a cor ao ícone da prancheta.
+
 ### AND-EXTRA — Ações compartilhadas nas abas do painel NAVI
 - [x] Exibir Iniciar/Parar Automação em Script, Log e Processados, refletindo o mesmo estado.
 - [x] Trocar os botões largos de limpeza por ícones compactos ao lado de Iniciar/Parar.
@@ -172,7 +192,8 @@ Estados: `[ ]` Não iniciado · `[-]` Em andamento · `[x]` Concluído e validad
 - [x] Executar a verificação secundária em cada ciclo em que `mainVerify` falhar.
 - [x] Executar cada Action somente quando sua Verify correspondente retorna verdadeiro.
 - [x] Aceitar `secondVerify` / `secondAction` como aliases Android, mantendo `secondaryVerify` / `secondaryAction` como nomes canônicos iOS.
-- **Resultado:** alinhada a ordem de verificação no `NaviSheetView` e adicionado suporte aos aliases no parser Android.
+- [x] Após a ação secundária, voltar a verificar primeiro a condição principal na mesma página.
+- **Resultado:** alinhada a ordem e a repetição do ciclo no `NaviSheetView`; a ação principal conclui o item, enquanto a secundária não o conclui e volta ao ciclo principal após as esperas configuradas.
 
 ### AND-EXTRA — Abrir páginas da automação na aba ativa
 - [x] Atualizar a sessão NAVI para a aba selecionada antes de abrir cada página enfileirada.

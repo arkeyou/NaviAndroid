@@ -7,6 +7,7 @@ import android.graphics.Typeface;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.Gravity;
+import android.view.HapticFeedbackConstants;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -37,6 +38,10 @@ public class NaviSheetView extends LinearLayout {
         NaviBrowserSession resolve(String tabId);
     }
 
+    public interface AutomationStateListener {
+        void onAutomationStateChanged(boolean running);
+    }
+
     public enum TabSelection {
         SCRIPT, LOG, PROCESSED
     }
@@ -46,6 +51,7 @@ public class NaviSheetView extends LinearLayout {
     private final AutomationManager automationManager;
     private NaviBrowserSession browserSession;
     private BrowserSessionResolver browserSessionResolver;
+    private AutomationStateListener automationStateListener;
     private NaviBrowserSession.Cancellable navigationObserver;
 
     private TabSelection currentTab = TabSelection.SCRIPT;
@@ -80,8 +86,9 @@ public class NaviSheetView extends LinearLayout {
     private ActionEvent.EnqueuePage currentPage = null;
     private boolean isProcessingPage = false;
     private boolean isPageFullyLoaded = false;
-    private int verifyAttemptCount = 0;
     private boolean isStarting = false;
+    private boolean automationStateKnown = false;
+    private boolean lastAutomationState = false;
     private int startGeneration = 0;
     private Thread configLoadThread;
 
@@ -137,6 +144,23 @@ public class NaviSheetView extends LinearLayout {
     public void setBrowserSessionResolver(BrowserSessionResolver resolver) {
         this.browserSessionResolver = resolver;
         bindToCurrentTab();
+    }
+
+    public void setAutomationStateListener(AutomationStateListener listener) {
+        this.automationStateListener = listener;
+        if (listener != null && automationStateKnown) {
+            listener.onAutomationStateChanged(lastAutomationState);
+        }
+    }
+
+    private void publishAutomationState(boolean running) {
+        if (!automationStateKnown && !running) return;
+        if (automationStateKnown && lastAutomationState == running) return;
+        automationStateKnown = true;
+        lastAutomationState = running;
+        if (automationStateListener != null) {
+            automationStateListener.onAutomationStateChanged(running);
+        }
     }
 
     private void bindToCurrentTab() {
@@ -429,6 +453,7 @@ public class NaviSheetView extends LinearLayout {
     }
 
     public void startAutomation() {
+        publishAutomationState(true);
         String configJson = configEditor.getText().toString();
         dataStore.saveConfig(configJson);
 
@@ -566,6 +591,7 @@ public class NaviSheetView extends LinearLayout {
 
     private void resetStartButton() {
         isStarting = false;
+        publishAutomationState(false);
         syncStartStopButtons();
     }
 
@@ -583,6 +609,10 @@ public class NaviSheetView extends LinearLayout {
         isPageFullyLoaded = false;
         currentPage = null;
         resetStartButton();
+        int stopFeedback = android.os.Build.VERSION.SDK_INT >= 30
+                ? HapticFeedbackConstants.REJECT
+                : HapticFeedbackConstants.LONG_PRESS;
+        performHapticFeedback(stopFeedback);
     }
 
     public boolean isAutomationRunning() {
@@ -603,7 +633,6 @@ public class NaviSheetView extends LinearLayout {
         isProcessingPage = true;
         isPageFullyLoaded = false;
         currentPage = nextPage;
-        verifyAttemptCount = 0;
 
         appendLog("Abrindo página: " + nextPage.getUrl(), true);
         try {
@@ -627,7 +656,6 @@ public class NaviSheetView extends LinearLayout {
         isPageFullyLoaded = true;
 
         appendLog("Página carregada! Aguardando elementos da tela...", true);
-        verifyAttemptCount = 0;
         pollVerification();
     }
 
@@ -641,15 +669,16 @@ public class NaviSheetView extends LinearLayout {
         final String actionScript = activePage.getScript();
 
         if (verifyScript == null || verifyScript.trim().isEmpty()) {
-            executeAction(actionScript);
+            executeAction(actionScript, true);
             return;
         }
 
-        verifyAttemptCount++;
         browserSession.evaluateJavaScript(verifyScript, 5000L, result -> mainHandler.post(() -> {
             if (!automationManager.isRunning() || !isProcessingPage || activePage != currentPage) {
                 return;
             }
+
+            performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK);
 
             boolean isConditionMet = false;
             if (result.isSuccess()) {
@@ -664,36 +693,27 @@ public class NaviSheetView extends LinearLayout {
 
             if (isConditionMet) {
                 appendLog("Encontrou! Executou 1a ação!", true);
-                executeAction(actionScript);
+                executeAction(actionScript, true);
             } else {
-                long likeWaitMs = (long) (dataStore.getLikeWaitInterval() * 1000);
-                if (likeWaitMs < 500) likeWaitMs = 500L;
-
-                int maxAttempts = (int) (dataStore.getPageWaitInterval() / (likeWaitMs / 1000.0));
-                if (maxAttempts < 5) maxAttempts = 10;
-
                 String verify2 = activePage.getScriptVerify2();
                 if (verify2 != null && !verify2.trim().isEmpty()) {
-                    pollSecondaryVerification(activePage.getScript2(), verifyAttemptCount, maxAttempts);
-                } else if (verifyAttemptCount < maxAttempts) {
-                    appendLog(".", false);
-                    mainHandler.postDelayed(this::pollVerification, likeWaitMs);
+                    pollSecondaryVerification();
                 } else {
-                    appendLog("\nElemento não encontrado na página após espera. Avançando.", true);
-                    finishCurrentPage();
+                    appendLog(".", false);
+                    scheduleMainVerificationAfterMonitorInterval();
                 }
             }
         }));
     }
 
-    private void pollSecondaryVerification(String action2Script, int mainAttempt, int maxAttempts) {
+    private void pollSecondaryVerification() {
         if (!automationManager.isRunning() || !isProcessingPage || currentPage == null || browserSession == null) {
             return;
         }
         final ActionEvent.EnqueuePage activePage = currentPage;
         String verify2 = activePage.getScriptVerify2();
         if (verify2 == null || verify2.trim().isEmpty()) {
-            finishCurrentPage();
+            scheduleMainVerificationAfterMonitorInterval();
             return;
         }
 
@@ -701,6 +721,8 @@ public class NaviSheetView extends LinearLayout {
             if (!automationManager.isRunning() || !isProcessingPage || activePage != currentPage) {
                 return;
             }
+
+            performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK);
 
             boolean isCondition2Met = false;
             if (result.isSuccess()) {
@@ -713,36 +735,35 @@ public class NaviSheetView extends LinearLayout {
                 }
             }
 
-            if (isCondition2Met && action2Script != null && !action2Script.trim().isEmpty()) {
+            if (isCondition2Met) {
                 appendLog("Encontrou! Executou 2a ação!", true);
-                executeAction(action2Script);
-            } else if (isCondition2Met) {
-                finishCurrentPage();
+                executeAction(activePage.getScript2(), false);
             } else {
                 appendLog(".", false);
-                if (mainAttempt < maxAttempts) {
-                    long likeWaitMs = (long) (dataStore.getLikeWaitInterval() * 1000);
-                    if (likeWaitMs < 500) likeWaitMs = 500L;
-                    mainHandler.postDelayed(this::pollVerification, likeWaitMs);
-                } else {
-                    appendLog("\nCondição secundária não atendida. Avançando.", true);
-                    finishCurrentPage();
-                }
+                scheduleMainVerificationAfterMonitorInterval();
             }
         }));
     }
 
-    private void executeAction(String actionScript) {
+    private void executeAction(String actionScript, boolean finishAfterAction) {
         if (actionScript == null || actionScript.trim().isEmpty()) {
-            finishCurrentPage();
+            if (finishAfterAction) {
+                finishCurrentPage();
+            } else {
+                scheduleMainVerification();
+            }
             return;
         }
 
+        final ActionEvent.EnqueuePage activePage = currentPage;
         appendLog("Executando ação...", true);
         browserSession.evaluateJavaScript(actionScript, 60000L, result -> mainHandler.post(() -> {
+            if (!automationManager.isRunning() || !isProcessingPage || activePage != currentPage) {
+                return;
+            }
             if (result.isSuccess()) {
                 appendLog("Ação concluída.", true);
-                if (Boolean.FALSE.equals(result.getValue()) || "false".equalsIgnoreCase(String.valueOf(result.getValue()))) {
+                if (finishAfterAction && (Boolean.FALSE.equals(result.getValue()) || "false".equalsIgnoreCase(String.valueOf(result.getValue())))) {
                     appendLog("Automação pausada pelo usuário no alerta de confirmação.", true);
                     stopAutomation();
                     return;
@@ -750,8 +771,26 @@ public class NaviSheetView extends LinearLayout {
             } else {
                 appendLog("Resultado da ação: " + result.getDetail(), true);
             }
-            finishCurrentPage();
+            if (finishAfterAction) {
+                finishCurrentPage();
+            } else {
+                scheduleMainVerification();
+            }
         }));
+    }
+
+    private void scheduleMainVerification() {
+        long likeWaitMs = (long) (dataStore.getLikeWaitInterval() * 1000);
+        if (likeWaitMs < 500) likeWaitMs = 500L;
+        long monitorWaitMs = (long) (dataStore.getIdsWaitInterval() * 1000);
+        if (monitorWaitMs < 500) monitorWaitMs = 500L;
+        mainHandler.postDelayed(this::pollVerification, likeWaitMs + monitorWaitMs);
+    }
+
+    private void scheduleMainVerificationAfterMonitorInterval() {
+        long monitorWaitMs = (long) (dataStore.getIdsWaitInterval() * 1000);
+        if (monitorWaitMs < 500) monitorWaitMs = 500L;
+        mainHandler.postDelayed(this::pollVerification, monitorWaitMs);
     }
 
     private void finishCurrentPage() {

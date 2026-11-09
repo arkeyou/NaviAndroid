@@ -4,4 +4,13 @@
 	<color name="colorAccent">#FFFFFF</color>
 	<color name="colorControlHighlight">#000000</color>
 	<color name="colorControlNormal">#00FF00</color>
+	<color name="navi_icon_background">#FFFFFF</color>
+	<color name="toolbar_icon_color">#FFFFFF</color>
+	<color name="toolbar_icon_contrast">#000000</color>
+	<color name="toolbar_surface_color">#14171C</color>
+	<color name="toolbar_border_color">#252B34</color>
+	<color name="address_surface_color">#292D34</color>
+	<color name="address_border_color">#3A414C</color>
+	<color name="address_text_color">#E8ECF2</color>
+	<color name="address_hint_color">#AAB2BF</color>
 </resources>

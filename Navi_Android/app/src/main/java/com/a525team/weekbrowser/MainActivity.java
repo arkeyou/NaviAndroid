@@ -341,6 +341,15 @@ public class MainActivity extends Activity {
 		sdown = findViewById(R.id.sdown);
 		ssl = findViewById(R.id.ssl);
 		autocomplete1 = findViewById(R.id.autocomplete1);
+		ImageButton addressClearButton = findViewById(R.id.addressClearButton);
+		if (addressClearButton != null) {
+			addressClearButton.setOnClickListener(v -> {
+				autocomplete1.setText("");
+				autocomplete1.requestFocus();
+				InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+				if (inputMethodManager != null) inputMethodManager.showSoftInput(autocomplete1, InputMethodManager.SHOW_IMPLICIT);
+			});
+		}
 		hide = findViewById(R.id.hide);
 		refresh = findViewById(R.id.refresh);
 		button1 = findViewById(R.id.button1);
@@ -354,6 +363,14 @@ public class MainActivity extends Activity {
 		));
 
 		SkinButton buttonNaviPanel = findViewById(R.id.buttonNaviPanel);
+		naviSheetView.setAutomationStateListener(running -> {
+			if (buttonNaviPanel == null) return;
+			android.graphics.drawable.Drawable[] icons = buttonNaviPanel.getCompoundDrawablesRelative();
+			if (icons.length == 0 || icons[0] == null) return;
+			android.graphics.drawable.Drawable icon = icons[0].mutate();
+			icon.setTint(android.graphics.Color.parseColor(running ? "#4CAF50" : "#F44336"));
+			buttonNaviPanel.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
+		});
 		Runnable ensureSessionBound = () -> {
 			String tabTag = getCurrentTabTag();
 			WebView activeWv = tabTag != null ? ResourceManager.getInstance().getWebViewForTab(tabTag) : null;
@@ -388,6 +405,8 @@ public class MainActivity extends Activity {
 		};
 
 		if (buttonNaviPanel != null) {
+			buttonNaviPanel.setText("");
+			buttonNaviPanel.setContentDescription("Painel de automação");
 			buttonNaviPanel.setOnClickListener(toggleSheetListener);
 		}
 		SkinButton naviPanelButton = findViewById(R.id.naviPanel);
@@ -397,6 +416,7 @@ public class MainActivity extends Activity {
 
 		SkinButton buttonNavBack = findViewById(R.id.buttonNavBack);
 		if (buttonNavBack != null) {
+			buttonNavBack.setContentDescription("Voltar");
 			buttonNavBack.setOnClickListener(v -> {
 				String tabTag = getCurrentTabTag();
 				WebView activeWv = tabTag != null ? ResourceManager.getInstance().getWebViewForTab(tabTag) : null;
@@ -408,6 +428,7 @@ public class MainActivity extends Activity {
 
 		SkinButton buttonNavForward = findViewById(R.id.buttonNavForward);
 		if (buttonNavForward != null) {
+			buttonNavForward.setContentDescription("Avançar");
 			buttonNavForward.setOnClickListener(v -> {
 				String tabTag = getCurrentTabTag();
 				WebView activeWv = tabTag != null ? ResourceManager.getInstance().getWebViewForTab(tabTag) : null;
@@ -434,7 +455,8 @@ public class MainActivity extends Activity {
 		if (button1 != null) button1.setVisibility(View.GONE);
 		if (button3 != null) {
 			button3.setVisibility(View.VISIBLE);
-			button3.setText("");
+			button3.setText("");
+			button3.setContentDescription(getString(R.string.settingsbtn));
 		}
 		linear16 = findViewById(R.id.linear16);
 		closeeditor = findViewById(R.id.closeeditor);
@@ -2708,16 +2730,16 @@ skin.setBG(linear2, 2, false);
 
 	private void showStartupLogo(WebView webView) {
 		if (webView == null) return;
-		try (InputStream input = getResources().openRawResource(R.drawable.navi_mono_icon);
+		try (InputStream input = getResources().openRawResource(R.drawable.navi_startup_logo);
 			 ByteArrayOutputStream bytes = new ByteArrayOutputStream()) {
 			byte[] buffer = new byte[4096];
 			int count;
 			while ((count = input.read(buffer)) != -1) bytes.write(buffer, 0, count);
 			String icon = android.util.Base64.encodeToString(bytes.toByteArray(), android.util.Base64.NO_WRAP);
 			String html = "<!doctype html><html><head><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"></head>"
-					+ "<body style=\"margin:0;background:#1c1c1e;min-height:100vh;display:flex;align-items:center;justify-content:center\">"
+				+ "<body style=\"margin:0;background:#808080;min-height:100vh;display:flex;align-items:center;justify-content:center\">"
 					+ "<img alt=\"Navi\" style=\"width:120px;height:120px;object-fit:contain\" src=\"data:image/png;base64," + icon + "\"></body></html>";
-			webView.setBackgroundColor(android.graphics.Color.rgb(28, 28, 30));
+			webView.setBackgroundColor(android.graphics.Color.rgb(128, 128, 128));
 			webView.loadDataWithBaseURL("about:blank", html, "text/html", "UTF-8", null);
 		} catch (IOException e) {
 			android.util.Log.e("Navi", "Could not load startup logo", e);
@@ -3902,6 +3924,10 @@ handler.post(runnable);
 	
 	private void loadSuggestions(String text) {
 		ArrayList<String> suggestions = new ArrayList<>();
+		if (text == null || text.trim().isEmpty()) {
+			ThemeManager.setAutocomp(this, suggestions, autocomplete1);
+			return;
+		}
 		
 		// Локальні пропозиції
 		for (String local : srcsug) {
