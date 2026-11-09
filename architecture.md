@@ -54,6 +54,51 @@ O código NAVI está no Swift Package `Navi_iOS/LocalPackage`, target `Automatio
 
 O navegador iOS tem UI em SwiftUI, camada de stores em `Model`, clientes de dependência em `DataSource` e `WKWebView` fornecido por WebUI. A configuração `.forNavi` não registra `WKUserScript` nem `WKScriptMessageHandler`; a execução NAVI identificada é por `evaluateJavaScript`, acionada pela aplicação, e não por injeção garantida no início de cada documento.
 
+## Assinaturas e billing (análise em 2026-11-09)
+
+### Modelo atual no Navi_iOS
+
+- `Navi_iOS/LocalPackage/Sources/DataSource/Repositories/IAPManager.swift` usa StoreKit 2 e define dois produtos: mensal `navipay01` e anual `navipay02`. O paywall busca os produtos da App Store, exibe os preços localizados, inicia compras, oferece restauração e consulta `Transaction.currentEntitlements` para reconhecer transações ativas e não revogadas. `Transaction.updates` atualiza o estado após compras e mudanças posteriores.
+- O entitlement `isSubscribed` libera processamento sem limite. Para não assinantes, `NaviQueueConfig.dailyLimit` define 10 processamentos por dia. `NaviQueueTracker.recordEnqueue` é chamado após a ação principal (`NaviPanelView.swift`); apesar do nome, esse incremento conta o processamento nessa etapa, e não a inserção inicial na fila.
+- `NaviQueueTracker` mantém data, contador diário e um cache booleano de assinatura em `UserDefaults`. O valor de assinatura é sincronizado pelas transações atuais do StoreKit ao iniciar/atualizar o `IAPManager`; o cache não é, por si só, a prova da compra.
+- Há dois comportamentos de demonstração a não transportar para produção: o manager define preços fixos de fallback e, quando um plano não contém um `Product` carregado do StoreKit, `purchase(plan:)` simula uma compra e define `isSubscribed = true`. Em produção, indisponibilidade do catálogo deve impedir a compra, e os preços devem vir da loja.
+
+### Equivalente Android
+
+O modelo comercial é aplicável ao Android: planos mensal e anual, limite diário para não assinantes e entitlement ilimitado para assinantes. A implementação Android deve usar Google Play Billing; StoreKit e os identificadores da App Store não são reutilizáveis como transações. Os produtos precisam ser cadastrados no Play Console para o `applicationId` publicado, e preços e períodos devem vir do catálogo do Google Play.
+
+Fluxo Android esperado:
+
+1. Conectar `BillingClient` e carregar os detalhes dos produtos e ofertas da Play Store.
+2. Iniciar a compra pelo fluxo do Google Play e tratar compra concluída, cancelada e pendente. Não conceder entitlement enquanto a compra estiver pendente.
+3. Validar compras concluídas, conceder o entitlement somente após validação e reconhecer a compra inicial dentro do prazo exigido pelo Google. Renovação, cancelamento, expiração, revogação e mudanças de plano precisam atualizar o estado.
+4. Consultar compras ao conectar e ao retomar o app, para recuperar compras feitas fora do fluxo atual e restaurar o acesso em outro dispositivo da mesma conta Play. Oferecer link para o usuário gerenciar/cancelar a assinatura na central do Google Play.
+5. Aplicar no Android a mesma regra de uso diário; alinhar se a unidade contada continuará sendo o processamento bem-sucedido da ação principal ou se será alterada para outra etapa.
+
+O projeto Android inspecionado ainda não tem dependência nem integração Billing (`Navi_Android/app/build.gradle` contém somente `fileTree`), e declara `applicationId` `com.a525team.weekbrowser`. O cadastro e a integração de produtos Play ainda não foram feitos. Como a assinatura libera funcionalidade digital dentro de um app distribuído pelo Google Play, a regra geral da loja exige Google Play Billing, salvo exceções de política aplicáveis.
+
+### Validação e compartilhamento entre plataformas
+
+O Google recomenda que o app envie o purchase token a um backend seguro para validar a compra com a Google Play Developer API, armazenar o entitlement e sincronizar eventos de ciclo de vida por Real-time Developer Notifications. A documentação admite reconhecimento no cliente para apps sem backend, mas a validação e o processamento no servidor oferecem maior resiliência contra fraude, falta de rede e mudanças de estado enquanto o app está fechado. Não persistir um `isSubscribed` local como única autoridade.
+
+Sem login/identidade compartilhada e um serviço de entitlement comum, uma assinatura da App Store e uma do Google Play são independentes: cada uma libera o acesso no ecossistema em que foi comprada. Para permitir que uma única assinatura dê acesso em iOS e Android, será necessária uma conta compartilhada e backend que valide e una os entitlements das duas lojas. Esta decisão também afeta o cadastro dos produtos, a restauração e a interface de gerenciamento/cancelamento.
+
+Referências oficiais consultadas:
+
+- [Google Play Billing — integração e processamento de compras](https://developer.android.com/google/play/billing/integrate)
+- [Google Play Billing — segurança e validação](https://developer.android.com/google/play/billing/security)
+- [Google Play Billing — integração com backend e notificações de ciclo de vida](https://developer.android.com/google/play/billing/backend)
+- [Google Play Billing — gerenciar assinaturas e compras](https://developer.android.com/google/play/billing/manage-purchases)
+- [Política de pagamentos do Google Play](https://support.google.com/googleplay/android-developer/answer/9858738?hl=en)
+
+### Implementação Android (2026-11-09, parcial)
+
+- `NaviBillingManager` usa Google Play Billing Library 8.0.0; consulta os produtos de assinatura `navipay01` e `navipay02`, inicia a oferta retornada pela loja, sincroniza assinaturas ao abrir o app/retomar a Activity e reconhece compras concluídas. Compras pendentes não ativam acesso; compras concluídas não reconhecidas são encaminhadas a `acknowledgePurchase`.
+- O diálogo `NaviPaywallDialog` abre pelo item Navi Premium adicionado ao diálogo de Configurações da automação (`NaviSettingsDialog`), acionado pelo ícone de ajustes no `NaviSheetView`. A organização segue `PaywallView.swift`: fechar no topo à direita; cabeçalho central com ícone e título; banner de limite/assinatura; planos anual e mensal em cartões com seleção; ação primária; restaurar; aviso legal. Preço e oferta são lidos de `ProductDetails`; sem catálogo, os cartões continuam visíveis com preço indisponível, sem inventar valores. Restaurar consulta novamente as assinaturas Play e gerenciar assinatura abre a central oficial de assinaturas do Google Play.
+- `NaviDataStore` persiste contador diário e entitlement em armazenamento privado. O entitlement é atualizado pela lista de compras `PURCHASED` da Google Play; itens `PENDING` são ignorados. O fluxo Android aplica limite de 10 processamentos por data local e conta a conclusão da ação principal, acompanhando o ponto de contagem do iOS.
+- Pendências: cadastrar os IDs e base plans/ofertas no Play Console; validar compra, pendência, cancelamento, expiração e restauração com licença de teste; conferência visual manual do usuário. `assembleDebug` passou em 2026-11-09 (Gradle 8.13; 31 tarefas) e APK foi instalado e iniciado no AJ-C57/API 29 para verificação manual.
+- A checagem de compra no cliente não substitui validação e sincronização via backend. Sem backend/conta compartilhada, entitlement Android e iOS seguem independentes; `isSubscribed` local é cache derivado da resposta do Play e precisa ser reconciliado ao conectar/retomar.
+
 ## Matriz inicial WebKit → Android
 
 | Uso iOS identificado | Ponto Android candidato | Estado/diferença a preservar |

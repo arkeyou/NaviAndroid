@@ -14,6 +14,10 @@ public class NaviDataStore {
 
     private static final String PREFS_NAME = "navi_settings";
     private static final String KEY_NAVI_CONFIG = "saved_navi_config";
+    private static final String KEY_SUBSCRIBED = "navi_subscribed";
+    private static final String KEY_DAILY_COUNT = "navi_daily_count";
+    private static final String KEY_DAILY_DATE = "navi_daily_date";
+    public static final int DAILY_LIMIT = 10;
     private static final String LOG_FILE = "navi_log.txt";
     private static final String PROCESSED_FILE = "navi_processed.txt";
 
@@ -32,6 +36,28 @@ public class NaviDataStore {
 
     private SharedPreferences getPrefs() {
         return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+    }
+
+    public synchronized boolean isSubscribed() { return getPrefs().getBoolean(KEY_SUBSCRIBED, false); }
+    public synchronized void setSubscribed(boolean active) { getPrefs().edit().putBoolean(KEY_SUBSCRIBED, active).apply(); }
+
+    private void resetDailyCountIfNeeded() {
+        String today = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
+                .format(java.util.Calendar.getInstance().getTime());
+        if (!today.equals(getPrefs().getString(KEY_DAILY_DATE, ""))) {
+            getPrefs().edit().putString(KEY_DAILY_DATE, today).putInt(KEY_DAILY_COUNT, 0).apply();
+        }
+    }
+
+    public synchronized int getDailyCount() { resetDailyCountIfNeeded(); return getPrefs().getInt(KEY_DAILY_COUNT, 0); }
+    public synchronized boolean canProcessToday() { return isSubscribed() || getDailyCount() < DAILY_LIMIT; }
+    public synchronized boolean recordProcessedToday() {
+        if (isSubscribed()) return true;
+        resetDailyCountIfNeeded();
+        int count = getPrefs().getInt(KEY_DAILY_COUNT, 0);
+        if (count >= DAILY_LIMIT) return false;
+        getPrefs().edit().putInt(KEY_DAILY_COUNT, count + 1).apply();
+        return true;
     }
 
     public void saveConfig(String configJson) {

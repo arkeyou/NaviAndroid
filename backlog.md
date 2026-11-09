@@ -247,6 +247,12 @@ Estados: `[ ]` Não iniciado · `[-]` Em andamento · `[x]` Concluído e validad
 - [x] Retire o horário do log; entradas antigas também são exibidas sem timestamp.
 - [x] Em nova inicialização, descarte as abas persistidas e abra uma única página escura com o logo monocromático do Navi iOS; novas abas continuam usando a página inicial configurada no WeekBrowser.
 - [x] Adicione o botão de favoritos imediatamente à esquerda do campo de endereço, abrindo `BookmarksActivity` do WeekBrowser.
+
+### AND-EXTRA — Layout das configurações de automação
+- [-] Alinhar configuração Android ao layout e aos textos da referência iOS anexada.
+- [x] Reordenar os intervalos para Verifica Online, Monitora URL, FLOW, ACTION e carregamento de página; exibir valores editáveis à direita em cartão único.
+- [x] Adicionar o cartão Assinatura & IAP com acesso ao paywall existente.
+- **Resultado parcial (2026-11-09):** layout implementado em `NaviSettingsDialog.java`, seguindo os rótulos e descrições de `SettingsView.swift`. A compilação e validação visual no dispositivo não foram executadas nesta tarefa.
 - **Aceite:** disponibilizar a aplicação no dispositivo para testes manuais
 - **Resultado (2026-11-07):** implementação concluída em `MainActivity`, `main.xml`, `NaviDataStore` e recurso `navi_mono_icon.png`. Build `assembleDebug` concluído com sucesso em 59s (Gradle 8.13 / JDK 21). APK instalado via `adb install -r` no AJ-C57/API 29 (serial `M8GSKU8SQ1B0RD59XJA`) sem erros; app iniciado sem crash. Validação visual dos três ajustes (log sem timestamp, aba inicial com logo monocromático, botão ☆ de favoritos) pendente de confirmação manual pelo usuário.
 
@@ -265,11 +271,12 @@ Estados: `[ ]` Não iniciado · `[-]` Em andamento · `[x]` Concluído e validad
 - **Aceite:** sessão persistente testada.
 
 ### AND-033 — Assinaturas e limites
-- [ ] Inventariar produtos e entitlement iOS.
-- [ ] Definir produtos Android.
-- [ ] Integrar Google Play Billing se fizer parte do lançamento.
+- [x] Inventariar produtos e entitlement iOS.
+- [x] Definir IDs Android (`navipay01` mensal e `navipay02` anual), a cadastrar no Play Console.
+- [-] Integrar Google Play Billing e paywall na configuração da automação.
 - [ ] Testar compra, pendência, cancelamento e reconciliação.
 - **Aceite:** benefícios dependem do estado confirmado pelo Google Play; não reutilizar StoreKit.
+- **Resultado parcial (2026-11-09):** adicionado `NaviBillingManager` com consulta de catálogo/assinaturas, fluxo de compra, tratamento de cancelamento e pendência, reconciliação ao retomar o app e acknowledgment de compras concluídas. `NaviPaywallDialog` é aberto por Navi Premium dentro de Configurações da automação, no sheet NAVI. `NaviDataStore` aplica 10 processamentos/dia a não assinantes e acesso ilimitado quando há compra `PURCHASED` reconhecida pelo Play Billing. `assembleDebug` passou (Gradle 8.13, 31 tarefas; build executado fora do sandbox). Compra, pendência, restauração e estados reais ainda não foram testados; sem produtos cadastrados no Play Console, o catálogo/fluxo de compra não pode ser exercitado. Backend de validação e sincronização entre iOS/Android continua pendente; não há entitlement compartilhado entre lojas.
 
 ## Fase 4 — Qualidade e publicação
 

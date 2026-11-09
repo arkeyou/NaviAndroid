@@ -2,6 +2,7 @@ package com.a525team.weekbrowser;
 
 import com.a525team.weekbrowser.navi.ui.NaviSheetView;
 import com.a525team.weekbrowser.navi.core.NaviDataStore;
+import com.a525team.weekbrowser.navi.core.NaviBillingManager;
 
 import android.animation.*;
 import android.animation.Animator;
@@ -2109,6 +2110,7 @@ curnum = 1;
 	@Override
 	public void onResume() {
 		super.onResume();
+		NaviBillingManager.get(this).connect(null);
 		_init();
 		SafeMarginUtils.init(MainActivity.this, linear2);
 		

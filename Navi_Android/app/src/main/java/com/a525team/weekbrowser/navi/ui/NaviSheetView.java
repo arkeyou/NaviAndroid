@@ -668,6 +668,11 @@ public class NaviSheetView extends LinearLayout {
 
     private void processNextPage() {
         bindToCurrentTab();
+        if (!dataStore.canProcessToday()) {
+            appendLog("Limite diário de " + NaviDataStore.DAILY_LIMIT + " processamentos atingido. Consulte Navi Premium nas configurações.", true);
+            stopAutomation();
+            return;
+        }
         if (!automationManager.isRunning() || isProcessingPage || pageQueue.isEmpty() || browserSession == null) {
             return;
         }
@@ -841,6 +846,7 @@ public class NaviSheetView extends LinearLayout {
     }
 
     private void finishCurrentPage() {
+        dataStore.recordProcessedToday();
         long idsWaitMs = (long) (dataStore.getIdsWaitInterval() * 1000);
         if (idsWaitMs < 500) idsWaitMs = 1000L;
 
