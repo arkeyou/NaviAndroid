@@ -1,6 +1,7 @@
 package com.a525team.weekbrowser;
 
 import com.a525team.weekbrowser.navi.ui.NaviSheetView;
+import com.a525team.weekbrowser.navi.ui.NaviSettingsDialog;
 import com.a525team.weekbrowser.navi.core.NaviDataStore;
 import com.a525team.weekbrowser.navi.core.NaviBillingManager;
 
@@ -446,7 +447,7 @@ public class MainActivity extends Activity {
 		if (button3 != null) {
 			button3.setVisibility(View.VISIBLE);
 			button3.setText("");
-			button3.setContentDescription(getString(R.string.settingsbtn));
+			button3.setContentDescription("Configurações da automação");
 		}
 		linear16 = findViewById(R.id.linear16);
 		closeeditor = findViewById(R.id.closeeditor);
@@ -1608,7 +1609,7 @@ curnum = 1;
 		button3.setOnLongClickListener(new View.OnLongClickListener() {
 			@Override
 			public boolean onLongClick(View _view) {
-				SketchwareUtil.showMessage(getApplicationContext(), getString(R.string.settingsbtn));
+				SketchwareUtil.showMessage(getApplicationContext(), "Configurações da automação");
 				return true;
 			}
 		});
@@ -1616,8 +1617,7 @@ curnum = 1;
 		button3.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View _view) {
-				intent.setClass(getApplicationContext(), SettingsActivity.class);
-				startActivity(intent);
+				NaviSettingsDialog.show(MainActivity.this, new NaviDataStore(MainActivity.this), null);
 			}
 		});
 		

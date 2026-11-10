@@ -14,6 +14,7 @@ public class NaviDataStore {
 
     private static final String PREFS_NAME = "navi_settings";
     private static final String KEY_NAVI_CONFIG = "saved_navi_config";
+    private static final String KEY_LAST_SCRIPT_FILE_NAME = "last_script_file_name";
     private static final String KEY_SUBSCRIBED = "navi_subscribed";
     private static final String KEY_DAILY_COUNT = "navi_daily_count";
     private static final String KEY_DAILY_DATE = "navi_daily_date";
@@ -68,6 +69,14 @@ public class NaviDataStore {
 
     public String loadConfig() {
         return getPrefs().getString(KEY_NAVI_CONFIG, getDefaultConfig());
+    }
+
+    public void saveLastScriptFileName(String fileName) {
+        getPrefs().edit().putString(KEY_LAST_SCRIPT_FILE_NAME, fileName).apply();
+    }
+
+    public String loadLastScriptFileName() {
+        return getPrefs().getString(KEY_LAST_SCRIPT_FILE_NAME, "Sem titulo");
     }
 
     // --- Intervalos de Automação (segundos) ---

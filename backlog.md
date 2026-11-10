@@ -247,14 +247,26 @@ Estados: `[ ]` Não iniciado · `[-]` Em andamento · `[x]` Concluído e validad
 - [x] Retire o horário do log; entradas antigas também são exibidas sem timestamp.
 - [x] Em nova inicialização, descarte as abas persistidas e abra uma única página escura com o logo monocromático do Navi iOS; novas abas continuam usando a página inicial configurada no WeekBrowser.
 - [x] Adicione o botão de favoritos imediatamente à esquerda do campo de endereço, abrindo `BookmarksActivity` do WeekBrowser.
+- **Aceite:** disponibilizar a aplicação no dispositivo para testes manuais
+- **Resultado (2026-11-07):** implementação concluída em `MainActivity`, `main.xml`, `NaviDataStore` e recurso `navi_mono_icon.png`. Build `assembleDebug` concluído com sucesso em 59s (Gradle 8.13 / JDK 21). APK instalado via `adb install -r` no AJ-C57/API 29 (serial `M8GSKU8SQ1B0RD59XJA`) sem erros; app iniciado sem crash. Validação visual dos três ajustes (log sem timestamp, aba inicial com logo monocromático, botão ☆ de favoritos) pendente de confirmação manual pelo usuário.
 
 ### AND-EXTRA — Layout das configurações de automação
 - [-] Alinhar configuração Android ao layout e aos textos da referência iOS anexada.
 - [x] Reordenar os intervalos para Verifica Online, Monitora URL, FLOW, ACTION e carregamento de página; exibir valores editáveis à direita em cartão único.
 - [x] Adicionar o cartão Assinatura & IAP com acesso ao paywall existente.
 - **Resultado parcial (2026-11-09):** layout implementado em `NaviSettingsDialog.java`, seguindo os rótulos e descrições de `SettingsView.swift`. A compilação e validação visual no dispositivo não foram executadas nesta tarefa.
-- **Aceite:** disponibilizar a aplicação no dispositivo para testes manuais
-- **Resultado (2026-11-07):** implementação concluída em `MainActivity`, `main.xml`, `NaviDataStore` e recurso `navi_mono_icon.png`. Build `assembleDebug` concluído com sucesso em 59s (Gradle 8.13 / JDK 21). APK instalado via `adb install -r` no AJ-C57/API 29 (serial `M8GSKU8SQ1B0RD59XJA`) sem erros; app iniciado sem crash. Validação visual dos três ajustes (log sem timestamp, aba inicial com logo monocromático, botão ☆ de favoritos) pendente de confirmação manual pelo usuário.
+
+### AND-EXTRA — Acesso às configurações do navegador pelo NAVI
+- [x] Remover do sheet o botão de configurações, que agora é acessado pela engrenagem da barra de endereços.
+- [x] Adicionar ao fim das configurações NAVI um botão que abre `SettingsActivity`.
+- [x] Fazer a engrenagem da barra de endereços abrir diretamente as configurações da automação.
+- **Resultado parcial (2026-11-10):** a engrenagem da barra abre a tela NAVI de intervalos (`NaviSettingsDialog`); o botão inferior abre as configurações gerais (`SettingsActivity`). O atalho duplicado foi removido do sheet. Build e validação visual desta última alteração pendentes.
+
+### AND-EXTRA — Gerenciar arquivos de script no painel NAVI
+- [-] Adicionar ações icon-only de salvar, carregar e novo ao lado de Iniciar Automação.
+- [x] Salvar e carregar arquivos `.navi` em `files/naviScripts`, persistindo o último script usado.
+- [x] Fazer Novo limpar o editor e reiniciar o nome do script, seguindo o fluxo do iOS.
+- **Resultado parcial (2026-11-10):** implementados botões acessíveis por content description, diálogo de nome para salvar, seletor de scripts salvos e leitura/escrita UTF-8 no diretório privado do app. Build e validação funcional pendentes.
 
 ## Fase 3 — Paridade e recursos complementares
 

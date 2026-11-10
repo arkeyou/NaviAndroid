@@ -2,6 +2,7 @@ package com.a525team.weekbrowser.navi.ui;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
@@ -16,6 +17,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.a525team.weekbrowser.navi.core.NaviDataStore;
+import com.a525team.weekbrowser.SettingsActivity;
 
 public class NaviSettingsDialog {
 
@@ -94,6 +96,18 @@ public class NaviSettingsDialog {
                 "Tempo máximo de espera para a pagina carregar.",
                 String.valueOf(dataStore.getPageWaitInterval()), dp);
         root.addView(intervalCard, marginParams(-1, -2, 0, 0, 0, 0));
+
+        TextView browserSettings = bodyText(context, "⚙   Configuração do navegador", 15, PRIMARY);
+        browserSettings.setGravity(Gravity.CENTER_VERTICAL);
+        browserSettings.setPadding(20 * dp, 14 * dp, 20 * dp, 14 * dp);
+        browserSettings.setBackground(roundedBackground(CARD, 18 * dp));
+        browserSettings.setContentDescription("Configuração do navegador");
+        browserSettings.setOnClickListener(v -> {
+            AlertDialog current = (AlertDialog) v.getTag();
+            if (current != null) current.dismiss();
+            context.startActivity(new Intent(context, SettingsActivity.class));
+        });
+        root.addView(browserSettings, marginParams(-1, -2, 0, 16 * dp, 0, 0));
         scrollView.addView(root);
 
         AlertDialog dialog = new AlertDialog.Builder(context)
@@ -113,6 +127,7 @@ public class NaviSettingsDialog {
                 })
                 .setNegativeButton("Cancelar", null)
                 .create();
+        browserSettings.setTag(dialog);
         dialog.show();
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawable(new ColorDrawable(BACKGROUND));

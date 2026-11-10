@@ -1,5 +1,6 @@
 package com.a525team.weekbrowser.navi.ui;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.view.inputmethod.InputMethodManager;
 import android.graphics.Color;
@@ -11,9 +12,11 @@ import android.view.HapticFeedbackConstants;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.a525team.weekbrowser.navi.browser.NaviBrowserSession;
 import com.a525team.weekbrowser.navi.browser.WeekBrowserCookieProvider;
@@ -21,10 +24,18 @@ import com.a525team.weekbrowser.navi.core.AutomationManager;
 import com.a525team.weekbrowser.navi.core.NaviDataStore;
 import com.a525team.weekbrowser.navi.core.NpointConfigLoader;
 import com.a525team.weekbrowser.navi.model.ActionEvent;
+import com.a525team.weekbrowser.R;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.ArrayList;
 import java.util.List;
@@ -73,8 +84,8 @@ public class NaviSheetView extends LinearLayout {
     // Script View componentes
     private EditText configEditor;
     private Button startStopBtn;
+    private String currentScriptFileName = "Sem titulo";
     private final List<Button> startStopButtons = new ArrayList<>();
-    private Button settingsBtn;
 
     // Log View componentes
     private TextView logTextView;
@@ -289,6 +300,7 @@ public class NaviSheetView extends LinearLayout {
 
         configEditor = new EditText(getContext());
         configEditor.setText(dataStore.loadConfig());
+        currentScriptFileName = dataStore.loadLastScriptFileName();
         configEditor.setTextSize(11);
         configEditor.setTypeface(Typeface.MONOSPACE);
         configEditor.setTextColor(Color.parseColor("#E0E0E0"));
@@ -299,7 +311,7 @@ public class NaviSheetView extends LinearLayout {
         LayoutParams editorParams = new LayoutParams(LayoutParams.MATCH_PARENT, 0, 1f);
         scriptView.addView(configEditor, editorParams);
 
-        // Linha com Botão Iniciar Automação + Botão Engrenagem de Configurações
+        // Linha com Botões Iniciar/Parar Automação e Ocultar Teclado
         LinearLayout actionRow = new LinearLayout(getContext());
         actionRow.setOrientation(HORIZONTAL);
         actionRow.setGravity(Gravity.CENTER_VERTICAL);
@@ -310,6 +322,22 @@ public class NaviSheetView extends LinearLayout {
         configureStartStopButton(startStopBtn);
         LayoutParams startParams = new LayoutParams(0, LayoutParams.MATCH_PARENT, 1f);
         actionRow.addView(startStopBtn, startParams);
+
+        ImageButton saveScriptBtn = createScriptIconButton(R.drawable.navi_script_save, "Salvar script");
+        saveScriptBtn.setOnClickListener(v -> showSaveScriptDialog());
+        actionRow.addView(saveScriptBtn, scriptIconParams(p));
+
+        ImageButton loadScriptBtn = createScriptIconButton(R.drawable.navi_script_load, "Carregar script");
+        loadScriptBtn.setOnClickListener(v -> showSavedScripts());
+        actionRow.addView(loadScriptBtn, scriptIconParams(p));
+
+        ImageButton newScriptBtn = createScriptIconButton(R.drawable.navi_script_new, "Novo script");
+        newScriptBtn.setOnClickListener(v -> {
+            configEditor.setText("");
+            currentScriptFileName = "Sem titulo";
+            configEditor.requestFocus();
+        });
+        actionRow.addView(newScriptBtn, scriptIconParams(p));
 
         Button hideKeyboardBtn = new Button(getContext());
         hideKeyboardBtn.setText("⌄");
@@ -330,20 +358,124 @@ public class NaviSheetView extends LinearLayout {
         hideKeyboardParams.leftMargin = p / 2;
         actionRow.addView(hideKeyboardBtn, hideKeyboardParams);
 
-        settingsBtn = new Button(getContext());
-        settingsBtn.setText("⚙");
-        settingsBtn.setTextSize(18);
-        settingsBtn.setTextColor(Color.WHITE);
-        settingsBtn.setBackgroundColor(Color.parseColor("#333333"));
-        settingsBtn.setPadding(0, 0, 0, 0);
-        settingsBtn.setOnClickListener(v -> NaviSettingsDialog.show(getContext(), dataStore, () -> {
-            appendLog("Intervalos de automação atualizados.", true);
-        }));
-        LayoutParams settingsParams = new LayoutParams((int) (44 * getResources().getDisplayMetrics().density), LayoutParams.MATCH_PARENT);
-        settingsParams.leftMargin = p / 2;
-        actionRow.addView(settingsBtn, settingsParams);
-
         scriptView.addView(actionRow, actionRowParams);
+    }
+
+    private ImageButton createScriptIconButton(int icon, String description) {
+        ImageButton button = new ImageButton(getContext());
+        button.setImageResource(icon);
+        button.setBackgroundColor(Color.parseColor("#333333"));
+        button.setPadding(0, 0, 0, 0);
+        button.setScaleType(android.widget.ImageView.ScaleType.CENTER_INSIDE);
+        button.setContentDescription(description);
+        return button;
+    }
+
+    private LayoutParams scriptIconParams(int p) {
+        LayoutParams params = new LayoutParams((int) (40 * getResources().getDisplayMetrics().density),
+                LayoutParams.MATCH_PARENT);
+        params.leftMargin = p / 3;
+        return params;
+    }
+
+    private File getScriptsDirectory() {
+        return new File(getContext().getFilesDir(), "naviScripts");
+    }
+
+    private void showSaveScriptDialog() {
+        int p = (int) (16 * getResources().getDisplayMetrics().density);
+        EditText nameInput = new EditText(getContext());
+        nameInput.setSingleLine(true);
+        nameInput.setHint("Nome do arquivo");
+        nameInput.setText(currentScriptFileName.equals("Sem titulo")
+                ? "" : removeNaviExtension(currentScriptFileName));
+        nameInput.setInputType(android.text.InputType.TYPE_CLASS_TEXT
+                | android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
+        nameInput.setPadding(p, p / 2, p, p / 2);
+        LinearLayout container = new LinearLayout(getContext());
+        container.setPadding(p, 0, p, 0);
+        container.addView(nameInput, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+
+        AlertDialog dialog = new AlertDialog.Builder(getContext())
+                .setTitle("Salvar script")
+                .setView(container)
+                .setNegativeButton("Cancelar", null)
+                .setPositiveButton("Salvar", (d, which) -> saveScript(nameInput.getText().toString()))
+                .create();
+        dialog.show();
+    }
+
+    private void saveScript(String requestedName) {
+        String name = requestedName == null ? "" : requestedName.trim();
+        if (name.isEmpty()) {
+            Toast.makeText(getContext(), "Informe um nome para o script.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        name = name.replaceAll("[/\\\\:*?\"<>|]", "-");
+        if (!name.toLowerCase(java.util.Locale.ROOT).endsWith(".navi")) name += ".navi";
+        try {
+            File directory = getScriptsDirectory();
+            if (!directory.exists() && !directory.mkdirs()) {
+                throw new java.io.IOException("Não foi possível criar a pasta de scripts.");
+            }
+            File target = new File(directory, name);
+            try (FileOutputStream output = new FileOutputStream(target)) {
+                output.write(configEditor.getText().toString().getBytes(StandardCharsets.UTF_8));
+            }
+            currentScriptFileName = target.getName();
+            dataStore.saveConfig(configEditor.getText().toString());
+            dataStore.saveLastScriptFileName(currentScriptFileName);
+            Toast.makeText(getContext(), "Script salvo.", Toast.LENGTH_SHORT).show();
+        } catch (Exception error) {
+            Toast.makeText(getContext(), "Falha ao salvar script: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void showSavedScripts() {
+        File directory = getScriptsDirectory();
+        if (!directory.exists() && !directory.mkdirs()) {
+            Toast.makeText(getContext(), "Não foi possível abrir a pasta de scripts.", Toast.LENGTH_LONG).show();
+            return;
+        }
+        File[] scripts = directory.listFiles((dir, filename) -> filename.toLowerCase(java.util.Locale.ROOT).endsWith(".navi"));
+        if (scripts == null || scripts.length == 0) {
+            new AlertDialog.Builder(getContext())
+                    .setTitle("Carregar script")
+                    .setMessage("Nenhum script salvo")
+                    .setPositiveButton("OK", null)
+                    .show();
+            return;
+        }
+        Arrays.sort(scripts, Comparator.comparing(File::getName, String.CASE_INSENSITIVE_ORDER));
+        String[] labels = new String[scripts.length];
+        for (int i = 0; i < scripts.length; i++) labels[i] = removeNaviExtension(scripts[i].getName());
+        new AlertDialog.Builder(getContext())
+                .setTitle("Carregar script")
+                .setItems(labels, (dialog, index) -> loadScript(scripts[index]))
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private void loadScript(File script) {
+        try (FileInputStream input = new FileInputStream(script);
+             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[8192];
+            int count;
+            while ((count = input.read(buffer)) != -1) output.write(buffer, 0, count);
+            String content = new String(output.toByteArray(), StandardCharsets.UTF_8);
+            configEditor.setText(content);
+            currentScriptFileName = script.getName();
+            dataStore.saveConfig(content);
+            dataStore.saveLastScriptFileName(currentScriptFileName);
+            Toast.makeText(getContext(), "Script carregado.", Toast.LENGTH_SHORT).show();
+        } catch (Exception error) {
+            Toast.makeText(getContext(), "Falha ao carregar script: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private String removeNaviExtension(String filename) {
+        return filename.toLowerCase(java.util.Locale.ROOT).endsWith(".navi")
+                ? filename.substring(0, filename.length() - 5) : filename;
     }
 
     private void createLogView(int p) {
